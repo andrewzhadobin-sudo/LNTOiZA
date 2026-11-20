@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ЛНИТОиЗА v4.5 FPS — Исправленный запуск, шлифмашинка, манжета и телефон</title>
+  <title>ЛНИТОиЗА v4.6 FPS — Горизонтальный режим на телефоне</title>
   <style>
     * {
       box-sizing: border-box;
@@ -76,13 +76,13 @@
     /* Верхняя панель */
     .top-bar {
       position: fixed;
-      top: 12px;
-      left: 14px;
-      right: 14px;
+      top: 10px;
+      left: 12px;
+      right: 12px;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 8px;
+      gap: 6px;
       pointer-events: none;
       z-index: 15;
       flex-wrap: wrap;
@@ -90,7 +90,7 @@
 
     .hud-cluster {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -99,9 +99,9 @@
       background: rgba(15, 23, 42, 0.86);
       border: 1px solid rgba(148, 163, 184, 0.25);
       backdrop-filter: blur(8px);
-      padding: 7px 12px;
-      border-radius: 11px;
-      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12.5px;
     }
 
     .badge strong {
@@ -111,14 +111,14 @@
     .badge.fighter-hud {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 4px 12px 4px 6px;
+      gap: 7px;
+      padding: 3px 10px 3px 5px;
     }
 
     .hud-avatar {
-      width: 30px;
-      height: 36px;
-      border-radius: 8px;
+      width: 26px;
+      height: 32px;
+      border-radius: 7px;
       background: rgba(30, 41, 59, 0.9);
       border: 1px solid rgba(56, 189, 248, 0.35);
       display: flex;
@@ -128,8 +128,8 @@
     }
 
     .hud-avatar svg {
-      width: 26px;
-      height: 32px;
+      width: 22px;
+      height: 28px;
     }
 
     .badge.timer strong {
@@ -146,9 +146,9 @@
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(56, 189, 248, 0.35);
       color: #f8fafc;
-      padding: 7px 12px;
-      border-radius: 11px;
-      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12.5px;
       font-weight: 600;
       cursor: pointer;
     }
@@ -161,9 +161,9 @@
     /* Индикатор этапов */
     .steps-strip {
       position: fixed;
-      top: 58px;
-      left: 14px;
-      right: 14px;
+      top: 52px;
+      left: 12px;
+      right: 12px;
       display: flex;
       gap: 5px;
       pointer-events: none;
@@ -172,8 +172,8 @@
     }
 
     .step-chip {
-      font-size: 11.5px;
-      padding: 4px 9px;
+      font-size: 11px;
+      padding: 3px 8px;
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.78);
       border: 1px solid rgba(148, 163, 184, 0.2);
@@ -184,9 +184,8 @@
       background: rgba(56, 189, 248, 0.22);
       border-color: #38bdf8;
       color: #f8fafc;
-      font-weight: 600;}
-
-    .step-chip.done {
+      font-weight: 600;
+    }.step-chip.done {
       background: rgba(34, 197, 94, 0.16);
       border-color: rgba(74, 222, 128, 0.5);
       color: #86efac;
@@ -195,15 +194,15 @@
     /* Нижняя панель управления этапами */
     .bottom-panel {
       position: fixed;
-      bottom: 14px;
+      bottom: 12px;
       left: 50%;
       transform: translateX(-50%);
-      width: min(780px, calc(100% - 24px));
+      width: min(740px, calc(100% - 24px));
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(148, 163, 184, 0.28);
       backdrop-filter: blur(10px);
-      border-radius: 16px;
-      padding: 12px 16px;
+      border-radius: 14px;
+      padding: 10px 14px;
       z-index: 15;
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
     }
@@ -213,27 +212,27 @@
       justify-content: space-between;
       align-items: baseline;
       gap: 8px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       flex-wrap: wrap;
     }
 
     .stage-title {
-      font-size: 15.5px;
+      font-size: 14.5px;
       font-weight: 700;
       color: #f8fafc;
     }
 
     .stage-sub {
-      font-size: 12.5px;
+      font-size: 12px;
       color: #94a3b8;
     }
 
     .progress-wrap {
-      height: 11px;
+      height: 10px;
       background: #1e293b;
       border-radius: 999px;
       overflow: hidden;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .progress-bar {
@@ -248,13 +247,13 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      font-size: 12.5px;
+      font-size: 12px;
       color: #cbd5e1;
       flex-wrap: wrap;
     }
 
     .temp-pill {
-      padding: 3px 9px;
+      padding: 2px 8px;
       border-radius: 8px;
       background: rgba(30, 41, 59, 0.9);
       font-weight: 600;
@@ -291,9 +290,9 @@
     .joystick-zone {
       position: fixed;
       left: 22px;
-      bottom: 136px;
-      width: 124px;
-      height: 124px;
+      bottom: 24px;
+      width: 116px;
+      height: 116px;
       border-radius: 50%;
       background: rgba(15, 23, 42, 0.55);
       border: 2px solid rgba(148, 163, 184, 0.35);
@@ -305,10 +304,10 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 48px;
-      height: 48px;
-      margin-left: -24px;
-      margin-top: -24px;
+      width: 46px;
+      height: 46px;
+      margin-left: -23px;
+      margin-top: -23px;
       border-radius: 50%;
       background: rgba(56, 189, 248, 0.75);
       border: 2px solid #e0f2fe;
@@ -319,21 +318,21 @@
     .mobile-actions {
       position: fixed;
       right: 22px;
-      bottom: 136px;
+      bottom: 24px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
       pointer-events: auto;
     }
 
     .mobile-work-btn {
-      width: 96px;
-      height: 96px;
+      width: 90px;
+      height: 90px;
       border-radius: 50%;
-      border: 2px solid rgba(74, 222, 128, 0.8);
-      background: rgba(16, 185, 129, 0.28);
+      border: 2px solid rgba(74, 222, 128, 0.85);
+      background: rgba(16, 185, 129, 0.3);
       color: #f8fafc;
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 800;
       letter-spacing: 0.4px;
       backdrop-filter: blur(6px);
@@ -342,25 +341,62 @@
     }
 
     .mobile-work-btn.pressed {
-      background: rgba(34, 197, 94, 0.72);
+      background: rgba(34, 197, 94, 0.75);
       color: #052e16;
       transform: scale(0.95);
     }
 
     .mobile-sub-btns {
       display: flex;
-      gap: 8px;
+      gap: 7px;
       justify-content: flex-end;
     }
 
     .mobile-mini-btn {
-      padding: 8px 12px;
+      padding: 7px 11px;
       border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.4);
       background: rgba(15, 23, 42, 0.78);
       color: #f8fafc;
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Подсказка поворота в горизонтальную ориентацию на портретных экранах */
+    .rotate-prompt {
+      display: none;
+      position: fixed;
+      inset: 0;z-index: 45;
+      background: rgba(6, 10, 18, 0.95);
+      backdrop-filter: blur(10px);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      gap: 12px;
+    }
+
+    .rotate-prompt.show {
+      display: flex;
+    }
+
+    .rotate-icon {
+      font-size: 42px;
+      line-height: 1;
+      color: #38bdf8;
+    }
+
+    .rotate-skip-btn {
+      margin-top: 4px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(30, 41, 59, 0.85);
+      color: #e2e8f0;
+      font-size: 12.5px;
+      font-weight: 600;
       cursor: pointer;
     }
 
@@ -368,12 +404,13 @@
     .overlay {
       position: fixed;
       inset: 0;
-      display: flex;justify-content: center;
+      display: flex;
+      justify-content: center;
       align-items: center;
       background: rgba(6, 10, 18, 0.86);
       backdrop-filter: blur(7px);
       z-index: 30;
-      padding: 12px;
+      padding: 10px;
       overflow-y: auto;
     }
 
@@ -386,48 +423,48 @@
       width: 100%;
       background: rgba(15, 23, 42, 0.97);
       border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 20px;
-      padding: 20px;
+      border-radius: 18px;
+      padding: 16px 18px;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
       max-height: 94vh;
       overflow-y: auto;
     }
 
     h1 {
-      font-size: 24px;
-      margin-bottom: 6px;
+      font-size: 21px;
+      margin-bottom: 5px;
       color: #38bdf8;
     }
 
     p {
       color: #cbd5e1;
-      font-size: 13.5px;
-      line-height: 1.45;
-      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+      margin-bottom: 10px;
     }
 
     .section-label {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.6px;
       color: #94a3b8;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .roster-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-      gap: 9px;
-      margin-bottom: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .char-card {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 13px;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: 12px;
       background: rgba(30, 41, 59, 0.72);
       border: 1px solid rgba(148, 163, 184, 0.24);
       cursor: pointer;
@@ -442,10 +479,10 @@
     }
 
     .avatar-box {
-      width: 48px;
-      height: 56px;
+      width: 42px;
+      height: 50px;
       flex-shrink: 0;
-      border-radius: 10px;
+      border-radius: 9px;
       background: rgba(15, 23, 42, 0.85);
       border: 1px solid rgba(148, 163, 184, 0.2);
       display: flex;
@@ -458,7 +495,7 @@
     }
 
     .char-name {
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 700;
       color: #f8fafc;
       white-space: nowrap;
@@ -467,32 +504,32 @@
     }
 
     .char-build {
-      font-size: 11px;
+      font-size: 10.5px;
       color: #94a3b8;
-      margin-top: 2px;
+      margin-top: 1px;
     }
 
     .char-perk {
-      font-size: 10.5px;
+      font-size: 10px;
       color: #38bdf8;
-      margin-top: 2px;
+      margin-top: 1px;
       font-weight: 600;
     }
 
     .options-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 8px;
-      margin-bottom: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 7px;
+      margin-bottom: 10px;
     }
 
     .opt-btn {
-      padding: 9px 11px;
+      padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.3);
       background: rgba(30, 41, 59, 0.75);
       color: #cbd5e1;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 600;
       cursor: pointer;
     }
@@ -506,21 +543,19 @@
     .records-box {
       background: rgba(15, 23, 42, 0.75);
       border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      padding: 9px 12px;
-      margin-bottom: 12px;
-      font-size: 12.5px;
+      border-radius: 11px;
+      padding: 8px 11px;
+      margin-bottom: 10px;
+      font-size: 12px;
       color: #94a3b8;
     }
 
     .records-box strong {
       color: #fbbf24;
-    }
-
-    .primary-btn {
+    }.primary-btn {
       width: 100%;
-      padding: 13px 18px;
-      font-size: 15.5px;
+      padding: 12px 16px;
+      font-size: 15px;
       font-weight: 700;
       color: #07101c;
       background: linear-gradient(90deg, #38bdf8, #4ade80);
@@ -529,67 +564,90 @@
       cursor: pointer;
     }
 
-    @media (max-width: 768px) {
+    /* Ландшафтный режим на телефонах */
+    @media (max-height: 520px) and (orientation: landscape) {
+      .top-bar {
+        top: 6px;
+        left: 10px;
+        right: 10px;
+      }
+
       .badge {
-        padding: 5px 9px;
-        font-size: 11.5px;
-        border-radius: 9px;
+        padding: 4px 8px;
+        font-size: 11px;
+        border-radius: 8px;
       }
 
       .steps-strip {
-        top: 52px;
+        top: 38px;
+        left: 10px;
+        right: 10px;
         gap: 4px;
       }
 
       .step-chip {
-        font-size: 10.5px;
-        padding: 3px 7px;
+        font-size: 10px;
+        padding: 2px 7px;
       }
 
       .bottom-panel {
-        bottom: 8px;
-        padding: 10px 12px;
-        border-radius: 14px;
+        bottom: 6px;
+        width: min(460px, calc(100% - 250px));
+        padding: 7px 11px;
+        border-radius: 12px;
       }
 
       .stage-title {
-        font-size: 13.5px;
+        font-size: 12.5px;
       }
 
       .stage-sub {
-        font-size: 11px;
+        display: none;
       }
 
-      .telemetry {font-size: 11px;
+      .progress-wrap {
+        height: 8px;
+        margin-bottom: 4px;
+      }
+
+      .telemetry {
+        font-size: 10.5px;
+        gap: 5px;
       }
 
       .joystick-zone {
-        width: 104px;
-        height: 104px;
+        width: 96px;
+        height: 96px;
         left: 14px;
-        bottom: 118px;
+        bottom: 12px;
       }
 
       .joystick-knob {
-        width: 40px;
-        height: 40px;
-        margin-left: -20px;
-        margin-top: -20px;
+        width: 38px;
+        height: 38px;
+        margin-left: -19px;
+        margin-top: -19px;
       }
 
       .mobile-actions {
         right: 14px;
-        bottom: 118px;
+        bottom: 12px;
+        gap: 6px;
       }
 
       .mobile-work-btn {
-        width: 82px;
-        height: 82px;
-        font-size: 11.5px;
+        width: 76px;
+        height: 76px;
+        font-size: 11px;
+      }
+
+      .mobile-mini-btn {
+        padding: 5px 8px;
+        font-size: 10.5px;
       }
 
       .roster-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
   </style>
@@ -599,7 +657,7 @@
 
   <div class="top-bar">
     <div class="hud-cluster">
-      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.5</strong></div>
+      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.6</strong></div>
       <div class="badge fighter-hud">
         <div class="hud-avatar" id="hudAvatar"></div>
         <div>Боец: <strong id="hudCharName">Николаев Михаил</strong></div>
@@ -631,7 +689,7 @@
     </div>
   </div>
 
-  <!-- Сенсорное управление для телефона -->
+  <!-- Сенсорное управление для телефона (горизонтальный хват) -->
   <div class="touch-controls active" id="touchControls">
     <div class="joystick-zone" id="joystickZone">
       <div class="joystick-knob" id="joystickKnob"></div>
@@ -643,6 +701,15 @@
       </div>
       <button type="button" class="mobile-work-btn" id="mobileWorkBtn">РАБОТА</button>
     </div>
+  </div>
+
+  <!-- Подсказка поворота телефона в горизонтальную ориентацию --><div class="rotate-prompt" id="rotatePrompt">
+    <div class="rotate-icon">↻ 📱</div>
+    <h2 style="font-size:19px; color:#38bdf8;">Поверни телефон горизонтально</h2>
+    <p style="max-width:340px; margin-bottom:4px;">
+      Игра адаптирована под горизонтальный экран (ландшафт) для удобного обзора котлована, трубы и управления стиком.
+    </p>
+    <button type="button" class="rotate-skip-btn" id="rotateSkipBtn">Продолжить без поворота</button>
   </div>
 
   <div class="overlay" id="overlay">
@@ -667,8 +734,9 @@
         Лучшее время (3 стыка): <strong id="bestTime">—</strong> • Лучшее качество: <strong id="bestQuality">—</strong>
       </div>
 
-      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
-        <strong>ПК:</strong> WASD — ходьба, мышь — обзор, зажатая ЛКМ — работа шлифмашинкой/горелкой/роликом, Space — прыжок.<br /><strong>Телефон:</strong> левый стик — ходьба, свайп по экрану — обзор, кнопка «РАБОТА» — удержание инструмента.
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:10px;">
+        <strong>ПК:</strong> WASD — ходьба, мышь — обзор, зажатая ЛКМ — работа шлифмашинкой/горелкой/роликом, Space — прыжок.<br />
+        <strong>Телефон (горизонтально):</strong> левый стик — ходьба, свайп по экрану — обзор, кнопка «РАБОТА» — удержание инструмента.
       </p>
       <button type="button" class="primary-btn" id="startBtn">Начать работу</button>
     </div>
@@ -690,6 +758,43 @@
       document.body.classList.add('touch-device');
     }
 
+    const rotatePromptEl = document.getElementById('rotatePrompt');
+    const rotateSkipBtn = document.getElementById('rotateSkipBtn');
+    let ignorePortraitPrompt = false;
+
+    function checkOrientationPrompt() {
+      if (!isTouchDevice || ignorePortraitPrompt) {
+        rotatePromptEl.classList.remove('show');
+        return;
+      }
+      const isPortrait = window.innerHeight > window.innerWidth * 1.08;
+      rotatePromptEl.classList.toggle('show', isPortrait);
+    }
+
+    rotateSkipBtn.addEventListener('click', () => {
+      ignorePortraitPrompt = true;
+      rotatePromptEl.classList.remove('show');
+    });
+
+    window.addEventListener('orientationchange', () => {
+      setTimeout(checkOrientationPrompt, 150);
+    });
+
+    async function lockLandscapeOnPhone() {
+      if (!isTouchDevice) return;
+      try {
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+          await document.documentElement.requestFullscreen();
+        }
+      } catch (_) {}
+      try {
+        if (screen.orientation && screen.orientation.lock) {
+          await screen.orientation.lock('landscape');
+        }
+      } catch (_) {}
+      checkOrientationPrompt();
+    }
+
     // --- Список персонажей (10 бойцов) ---
     const CHARACTERS = [
       {
@@ -703,8 +808,7 @@
         workMult: 1.18,
         heatControlMult: 1.0,
         jacketColor: '#ea580c',
-        headGear: 'helmet',
-        glasses: false,
+        headGear: 'helmet',glasses: false,
         gingerBalding: false
       },
       {
@@ -813,7 +917,8 @@
         gingerBalding: false
       },
       {
-        id: 'zimin_vadim',name: 'Зимин Вадим',
+        id: 'zimin_vadim',
+        name: 'Зимин Вадим',
         buildText: 'Среднее телосложение',
         perkText: '+12% стабильное качество',
         bodyScaleX: 1.0,
@@ -847,8 +952,7 @@
       const shoulderHalfW = 14 * char.bodyScaleX;
       const torsoTopY = char.headGear === 'beanie' ? 24 : 26;
       const torsoH = 22 * char.bodyScaleY;
-      const headY = char.headGear === 'beanie' ? 16 : 18;
-      const headR = char.buildText.includes('крупный') ? 7.5 : 6.5;
+      const headY = char.headGear === 'beanie' ? 16 : 18;const headR = char.buildText.includes('крупный') ? 7.5 : 6.5;
 
       let headTopSVG = '';
       if (char.gingerBalding) {
@@ -883,7 +987,7 @@
         : '';
 
       return `
-        <svg viewBox="0 0 52 60" width="46" height="54" aria-hidden="true">
+        <svg viewBox="0 0 52 60" width="42" height="48" aria-hidden="true">
           <ellipse cx="26" cy="56" rx="${Math.max(10, shoulderHalfW)}" ry="2.5" fill="rgba(0,0,0,0.45)"/>
           <path d="M ${26 - shoulderHalfW} ${torsoTopY + torsoH}
                    L ${26 - shoulderHalfW * 0.9} ${torsoTopY}
@@ -896,7 +1000,9 @@
           ${headTopSVG}
         </svg>
       `;
-    }let selectedChar = CHARACTERS[0];
+    }
+
+    let selectedChar = CHARACTERS[0];
     const rosterGridEl = document.getElementById('rosterGrid');
     const hudCharNameEl = document.getElementById('hudCharName');
     const hudAvatarEl = document.getElementById('hudAvatar');
@@ -921,8 +1027,7 @@
         ctx.lineWidth = 0.8 + Math.random() * 1.4;
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(512, y + (Math.random() - 0.5) * 3);
-        ctx.stroke();
+        ctx.lineTo(512, y + (Math.random() - 0.5) * 3);ctx.stroke();
       }
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = THREE.RepeatWrapping;
@@ -1012,7 +1117,8 @@
       }
 
       playStageComplete() {
-        const ctx = this.ensureCtx();if (!ctx) return;
+        const ctx = this.ensureCtx();
+        if (!ctx) return;
         const t = ctx.currentTime;
         [523.25, 659.25, 783.99].forEach((freq, i) => {
           const osc = ctx.createOscillator();
@@ -1039,8 +1145,7 @@
         osc.frequency.exponentialRampToValueAtTime(760, t + 0.07);
         gain.gain.setValueAtTime(0.05, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        osc.connect(gain);gain.connect(ctx.destination);
         osc.start(t);
         osc.stop(t + 0.09);
       }
@@ -1089,7 +1194,6 @@
     trenchLight.position.set(0, 4.2, 2.2);
     scene.add(trenchLight);
 
-    // Котлован, ограждения, лестница, экскаватор
     const trenchFloorY = -2.2;
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(110, 110),
@@ -1116,7 +1220,8 @@
       const postN = new THREE.Mesh(postGeo, fenceMat);
       postN.position.set(x, 0.75, -5.2);
       const postS = postN.clone();
-      postS.position.z = 5.2;scene.add(postN, postS);
+      postS.position.z = 5.2;
+      scene.add(postN, postS);
     }
 
     const railN = new THREE.Mesh(new THREE.BoxGeometry(28.4, 0.08, 0.08), fenceMat);
@@ -1143,8 +1248,7 @@
     scene.add(ladderGroup);
 
     const excavator = new THREE.Group();
-    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45 });
+    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45 });
     const boomMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.5 });
 
     const trackL = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.55, 0.55), trackMat);
@@ -1174,7 +1278,6 @@
     excavator.rotation.y = -2.35;
     scene.add(excavator);
 
-    // Фоновые рабочие
     const workers = [];
     function createWorker(x, y, z, rotY, jacketHex) {
       const group = new THREE.Group();
@@ -1210,14 +1313,14 @@
     createWorker(2.2, trenchFloorY, -2.5, -2.2, 0x0284c7);
     createWorker(10.8, trenchFloorY, 3.0, -0.85, 0xeab308);
 
-    // 3D-фигура выбранного персонажа в котловане
     const JOINT_X = [-7.5, 0, 7.5];
     let currentJointIndex = 0;
     let selectedWorker3D = null;
 
     function rebuildSelectedWorker3D() {
       if (selectedWorker3D) {
-        scene.remove(selectedWorker3D.group);selectedWorker3D = null;
+        scene.remove(selectedWorker3D.group);
+        selectedWorker3D = null;
       }
 
       const char = selectedChar;
@@ -1248,8 +1351,7 @@
       const headY = torsoCenterY + torsoH * 0.5 + headR + 0.04;
 
       const head = new THREE.Mesh(
-        new THREE.SphereGeometry(headR, 14, 14),
-        new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
+        new THREE.SphereGeometry(headR, 14, 14),new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
       );
       head.position.y = headY;
       group.add(head);
@@ -1307,13 +1409,13 @@
       selectedWorker3D = { group, armR, baseY: trenchFloorY, phase: 0 };
     }
 
-    // Трубопровод и стык
     const pipeRadius = 1.05;
     const pipeCenterY = 0.8;
     const pipeLength = 28;
 
     const pipe = new THREE.Mesh(
-      new THREE.CylinderGeometry(pipeRadius, pipeRadius, pipeLength, 48, 1, true),new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.78, roughness: 0.32 })
+      new THREE.CylinderGeometry(pipeRadius, pipeRadius, pipeLength, 48, 1, true),
+      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.78, roughness: 0.32 })
     );
     pipe.rotation.z = Math.PI / 2;
     pipe.position.set(0, pipeCenterY, 0);
@@ -1349,8 +1451,7 @@
       color: 0xcbeafe,
       emissive: 0x0ea5e9,
       emissiveIntensity: 0.22,
-      metalness: 0.88,
-      roughness: 0.18,
+      metalness: 0.88,roughness: 0.18,
       transparent: true,
       opacity: 0.0
     });
@@ -1436,10 +1537,11 @@
       return ring;
     });
 
-    // Инструменты в руке
     const handRoot = new THREE.Group();
     handRoot.position.set(0.34, -0.28, -0.52);
-    camera.add(handRoot);const handBrush = new THREE.Group();
+    camera.add(handRoot);
+
+    const handBrush = new THREE.Group();
     const hbHandle = new THREE.Mesh(
       new THREE.BoxGeometry(0.08, 0.08, 0.42),
       new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.5 })
@@ -1468,8 +1570,7 @@
       new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide })
     );
     hgGuard.position.set(0, -0.032, -0.17);
-    handGrinder.add(hgBody, hgDisc, hgGuard);
-    handGrinder.visible = false;
+    handGrinder.add(hgBody, hgDisc, hgGuard);handGrinder.visible = false;
     handRoot.add(handGrinder);
 
     const handTorch = new THREE.Group();
@@ -1510,7 +1611,6 @@
     handRoller.visible = false;
     handRoot.add(handRoller);
 
-    // Пузыри
     const bubbleMeshes = [];
     const bubbleGeo = new THREE.SphereGeometry(0.11, 12, 12);
     const bubbleMat = new THREE.MeshStandardMaterial({
@@ -1520,7 +1620,6 @@
       roughness: 0.25
     });
 
-    // Состояние игрока и игры
     const eyeHeight = 1.65;
     const playerRadius = 0.55;
     let yaw = 0;
@@ -1543,11 +1642,11 @@
     let normMode = false;
     let totalJoints = 3;
 
-    // DOM ссылки
     const crosshairEl = document.getElementById('crosshair');
     const jointCounterEl = document.getElementById('jointCounter');
     const stepsStripEl = document.getElementById('stepsStrip');
-    const normBadgeEl = document.getElementById('normBadge');const normLabelEl = document.getElementById('normLabel');
+    const normBadgeEl = document.getElementById('normBadge');
+    const normLabelEl = document.getElementById('normLabel');
     const timerEl = document.getElementById('timer');
     const qualityScoreEl = document.getElementById('qualityScore');
     const soundBtn = document.getElementById('soundBtn');
@@ -1568,8 +1667,7 @@
     const bestQualityEl = document.getElementById('bestQuality');
     const startBtn = document.getElementById('startBtn');
     const joystickZone = document.getElementById('joystickZone');
-    const joystickKnob = document.getElementById('joystickKnob');
-    const mobileWorkBtn = document.getElementById('mobileWorkBtn');
+    const joystickKnob = document.getElementById('joystickKnob');const mobileWorkBtn = document.getElementById('mobileWorkBtn');
     const mobileJumpBtn = document.getElementById('mobileJumpBtn');
     const mobilePauseBtn = document.getElementById('mobilePauseBtn');
 
@@ -1639,7 +1737,8 @@
       glueRight.position.x = 0.35 + t * 0.79;
     }
 
-    const STAGES = [{ short: '1. Очистка', title: '1. Очистка поверхности', hint: 'Наведи прицел на стык и удерживай работу, чтобы снять грязь' },
+    const STAGES = [
+      { short: '1. Очистка', title: '1. Очистка поверхности', hint: 'Наведи прицел на стык и удерживай работу, чтобы снять грязь' },
       { short: '2. Шлифмашинка', title: '2. Зачистка шлифмашинкой', hint: 'Удерживай работу шлифмашинкой до блеска зачищенного металла' },
       { short: '3. Нагрев 90 °C', title: '3. Нагрев горелкой до 90 °C', hint: 'Нагрей стык до ~90 °C без перегрева выше 105 °C' },
       { short: '4. Усадка', title: '4. Усадка манжеты от середины к краям', hint: 'Веди усадку от центра к краям, пока на концах не проступит белый клей' },
@@ -1663,8 +1762,7 @@
       progressBarEl.style.width = `${Math.min(100, Math.max(0, stageProgress))}%`;
       qualityScoreEl.textContent = `${Math.max(0, Math.round(quality))}%`;
 
-      if (normMode) {
-        const left = Math.max(0, (totalJoints === 3 ? 140 : 50) - elapsed);
+      if (normMode) {const left = Math.max(0, (totalJoints === 3 ? 140 : 50) - elapsed);
         normLabelEl.textContent = `${left.toFixed(1)} с`;
         normBadgeEl.classList.toggle('fail', left <= 15);
       } else {
@@ -1711,8 +1809,8 @@
       timerEl.textContent = '00.0 с';
     }
 
-    let bestTime = localStorage.getItem('lnitoizaV45BestTime');
-    let bestQuality = localStorage.getItem('lnitoizaV45BestQuality');
+    let bestTime = localStorage.getItem('lnitoizaV46BestTime');
+    let bestQuality = localStorage.getItem('lnitoizaV46BestQuality');
 
     function renderRecords() {
       bestTimeEl.textContent = bestTime ? `${Number(bestTime).toFixed(1)} с` : '—';
@@ -1734,7 +1832,8 @@
     joints1Btn.addEventListener('click', () => { totalJoints = 1; syncModeButtons(); });
     joints3Btn.addEventListener('click', () => { totalJoints = 3; syncModeButtons(); });
 
-    soundBtn.addEventListener('click', () => {sound.enabled = !sound.enabled;
+    soundBtn.addEventListener('click', () => {
+      sound.enabled = !sound.enabled;
       soundBtn.textContent = sound.enabled ? 'Звук: ВКЛ' : 'Звук: ВЫКЛ';
       soundBtn.classList.toggle('muted', !sound.enabled);
     });
@@ -1773,11 +1872,10 @@
       if (success && totalJoints === 3) {
         if (!bestTime || elapsed < Number(bestTime)) {
           bestTime = elapsed.toFixed(1);
-          localStorage.setItem('lnitoizaV45BestTime', bestTime);
-        }
-        if (!bestQuality || finalQuality > Number(bestQuality)) {
+          localStorage.setItem('lnitoizaV46BestTime', bestTime);
+        }if (!bestQuality || finalQuality > Number(bestQuality)) {
           bestQuality = String(finalQuality);
-          localStorage.setItem('lnitoizaV45BestQuality', bestQuality);
+          localStorage.setItem('lnitoizaV46BestQuality', bestQuality);
         }
         renderRecords();
       }
@@ -1831,9 +1929,10 @@
       }
     }
 
-    // --- Надёжный запуск работы ---
     function beginGameSession() {
       sound.ensureCtx();
+      lockLandscapeOnPhone();
+
       if (isFinished || (elapsed === 0 && stageIndex === 0 && stageProgress === 0)) {
         resetSimulation();
       } else {
@@ -1849,25 +1948,13 @@
           const req = renderer.domElement.requestPointerLock();
           if (req && typeof req.catch === 'function') {
             req.catch(() => {});
-          }} catch (_) {}
+          }
+        } catch (_) {}
       }
     }
 
     startBtn.addEventListener('click', beginGameSession);
-    startBtn.addEventListener('touchend', (e) => {
-      e.preventDefault();
-      beginGameSession();
-    }, { passive: false });
 
-    document.addEventListener('pointerlockchange', () => {
-      if (isTouchDevice) return;
-      const locked = document.pointerLockElement === renderer.domElement;
-      if (!locked && isRunning && !isFinished && !overlayEl.classList.contains('hidden')) {
-        // Уже на паузе
-      }
-    });
-
-    // Рендер карточек бойцов (после объявления всех функций и переменных)
     function renderRoster() {
       rosterGridEl.innerHTML = '';
       CHARACTERS.forEach((char) => {
@@ -1895,8 +1982,8 @@
     renderRoster();
     syncSelectedCharacterVisuals();
     rebuildSelectedWorker3D();
+    checkOrientationPrompt();
 
-    // --- Управление ПК и телефон ---
     const keys = new Set();
 
     window.addEventListener('keydown', (e) => {
@@ -1909,9 +1996,7 @@
 
     window.addEventListener('keyup', (e) => {
       keys.delete(e.code);
-    });
-
-    window.addEventListener('mousemove', (e) => {
+    });window.addEventListener('mousemove', (e) => {
       if (!isRunning || isTouchDevice) return;
       const sensitivity = 0.0021;
       yaw -= e.movementX * sensitivity;
@@ -1976,7 +2061,8 @@
         }
       }
     }
-    joystickZone.addEventListener('touchend', resetJoystick);joystickZone.addEventListener('touchcancel', resetJoystick);
+    joystickZone.addEventListener('touchend', resetJoystick);
+    joystickZone.addEventListener('touchcancel', resetJoystick);
 
     mobileWorkBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -2035,8 +2121,7 @@
           pitch -= dy * touchSens;
           const maxPitch = Math.PI / 2 - 0.05;
           pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
-          camera.rotation.y = yaw;
-          camera.rotation.x = pitch;
+          camera.rotation.y = yaw;camera.rotation.x = pitch;
         }
       }
     }, { passive: false });
@@ -2053,6 +2138,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      checkOrientationPrompt();
     });
 
     function clampInsideTrench(x, z) {
@@ -2072,7 +2158,6 @@
     const raycaster = new THREE.Raycaster();
     const centerNDC = new THREE.Vector2(0, 0);
 
-    // --- Главный цикл ---
     let lastTime = performance.now();
 
     function animate(now) {
@@ -2094,7 +2179,8 @@
         selectedWorker3D.armR.rotation.x = -0.8 + Math.sin(selectedWorker3D.phase * 1.8) * 0.28;
       }
 
-      if (isRunning) {elapsed += dt;
+      if (isRunning) {
+        elapsed += dt;
         timerEl.textContent = `${elapsed.toFixed(1)} с`;
 
         if (normMode && elapsed >= (totalJoints === 3 ? 140 : 50)) {
@@ -2138,8 +2224,7 @@
         const jointTargets = [dirtLayer, cleanedLayer, sleeveMesh, lockStrip];
         const hits = raycaster.intersectObjects(jointTargets);
         const onActiveJoint = hits.length > 0 && Math.abs(hits[0].point.x - JOINT_X[currentJointIndex]) <= 1.45;
-        aimingAtJoint = onActiveJoint;
-        crosshairEl.classList.toggle('locked-target', aimingAtJoint);
+        aimingAtJoint = onActiveJoint;crosshairEl.classList.toggle('locked-target', aimingAtJoint);
 
         if (workHeld && aimingAtJoint) {
           const pt = hits[0].point;
@@ -2190,7 +2275,8 @@
           if (stageProgress >= 100) advanceStage();
 
         } else if (stageIndex === 1) {
-          if (workHeld) {stageProgress += dt * 34 * selectedChar.workMult;
+          if (workHeld) {
+            stageProgress += dt * 34 * selectedChar.workMult;
             const p = stageProgress / 100;
             cleanedMat.opacity = Math.min(0.92, 0.55 + p * 0.37);
             grindRingMat.opacity = Math.min(0.85, 0.4 + p * 0.45);
@@ -2231,8 +2317,7 @@
             actionStatusEl.textContent = glueReady
               ? 'Белый клей выступает на краях манжеты! Завершаем усадку...'
               : 'Усадка манжеты от середины к краям... следи за пузырями!';
-            sound.playWorkTick('torch');
-          } else {
+            sound.playWorkTick('torch');} else {
             actionStatusEl.textContent = 'Удерживай работу для усадки от середины к краям';
           }
 
