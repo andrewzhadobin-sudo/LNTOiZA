@@ -1,0 +1,2309 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>ЛНИТОиЗА v4.4 FPS — Шлифмашинка, манжета с белым клеем и мобильный режим</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      overflow: hidden;
+      background: #0b101b;
+      color: #f8fafc;
+      user-select: none;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      touch-action: none;
+    }
+
+    /* Прицел по центру экрана */
+    .crosshair {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 22px;
+      height: 22px;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 16;
+      transition: transform 0.12s ease;
+    }
+
+    .crosshair::before,
+    .crosshair::after {
+      content: "";
+      position: absolute;
+      background: rgba(248, 250, 252, 0.8);
+      box-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
+    }
+
+    .crosshair::before {
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+
+    .crosshair::after {
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      transform: translateX(-50%);
+    }
+
+    .crosshair.locked-target {
+      transform: translate(-50%, -50%) scale(1.25);
+    }
+
+    .crosshair.locked-target::before,
+    .crosshair.locked-target::after {
+      background: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.95);
+    }
+
+    /* Верхняя панель */
+    .top-bar {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 15;
+      flex-wrap: wrap;
+    }
+
+    .hud-cluster {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: rgba(15, 23, 42, 0.86);
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      backdrop-filter: blur(8px);
+      padding: 7px 12px;
+      border-radius: 11px;
+      font-size: 13px;
+    }
+
+    .badge strong {
+      color: #38bdf8;
+    }
+
+    .badge.fighter-hud {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px 4px 6px;
+    }
+
+    .hud-avatar {
+      width: 30px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .hud-avatar svg {
+      width: 26px;
+      height: 32px;
+    }
+
+    .badge.timer strong {
+      color: #fbbf24;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .badge.norm.fail strong {
+      color: #fb7185;
+    }
+
+    .sound-btn {
+      pointer-events: auto;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #f8fafc;
+      padding: 7px 12px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sound-btn.muted {
+      opacity: 0.65;
+      border-color: rgba(148, 163, 184, 0.3);
+    }
+
+    /* Индикатор этапов */
+    .steps-strip {
+      position: fixed;
+      top: 58px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      gap: 5px;
+      pointer-events: none;
+      z-index: 14;
+      flex-wrap: wrap;
+    }
+
+    .step-chip {
+      font-size: 11.5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.78);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #94a3b8;
+    }
+
+    .step-chip.active {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: #38bdf8;
+      color: #f8fafc;
+      font-weight: 600;}
+
+    .step-chip.done {
+      background: rgba(34, 197, 94, 0.16);
+      border-color: rgba(74, 222, 128, 0.5);
+      color: #86efac;
+    }
+
+    /* Нижняя панель управления этапами */
+    .bottom-panel {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(780px, calc(100% - 24px));
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 12px 16px;
+      z-index: 15;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+    }
+
+    .stage-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .stage-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+
+    .stage-sub {
+      font-size: 12.5px;
+      color: #94a3b8;
+    }
+
+    .progress-wrap {
+      height: 11px;
+      background: #1e293b;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #22c55e);
+      transition: width 0.08s linear;
+    }
+
+    .telemetry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: #cbd5e1;
+      flex-wrap: wrap;
+    }
+
+    .temp-pill {
+      padding: 3px 9px;
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.9);
+      font-weight: 600;
+    }
+
+    .temp-pill.target {
+      color: #4ade80;
+      border: 1px solid rgba(74, 222, 128, 0.45);
+    }
+
+    .temp-pill.hot {
+      color: #fb7185;
+      border: 1px solid rgba(251, 113, 133, 0.45);
+    }
+
+    .bubbles-pill {
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    /* Мобильные элементы управления */
+    .touch-controls {
+      display: none;
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 17;
+    }
+
+    body.touch-device .touch-controls.active {
+      display: block;
+    }
+
+    .joystick-zone {
+      position: fixed;
+      left: 22px;
+      bottom: 136px;
+      width: 124px;
+      height: 124px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.55);
+      border: 2px solid rgba(148, 163, 184, 0.35);
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    .joystick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 48px;
+      height: 48px;
+      margin-left: -24px;
+      margin-top: -24px;
+      border-radius: 50%;
+      background: rgba(56, 189, 248, 0.75);
+      border: 2px solid #e0f2fe;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+    }
+
+    .mobile-actions {
+      position: fixed;
+      right: 22px;
+      bottom: 136px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .mobile-work-btn {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      border: 2px solid rgba(74, 222, 128, 0.8);
+      background: rgba(16, 185, 129, 0.28);
+      color: #f8fafc;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      backdrop-filter: blur(6px);
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    .mobile-work-btn.pressed {
+      background: rgba(34, 197, 94, 0.72);
+      color: #052e16;
+      transform: scale(0.95);
+    }
+
+    .mobile-sub-btns {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .mobile-mini-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(15, 23, 42, 0.78);
+      color: #f8fafc;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Модальное окно старта / паузы / финала */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;justify-content: center;
+      align-items: center;
+      background: rgba(6, 10, 18, 0.86);
+      backdrop-filter: blur(7px);
+      z-index: 30;
+      padding: 12px;
+      overflow-y: auto;
+    }
+
+    .overlay.hidden {
+      display: none;
+    }
+
+    .card {
+      max-width: 780px;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.97);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+      max-height: 94vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin-bottom: 6px;
+      color: #38bdf8;
+    }
+
+    p {
+      color: #cbd5e1;
+      font-size: 13.5px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 9px;
+      margin-bottom: 14px;
+    }
+
+    .char-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 13px;
+      background: rgba(30, 41, 59, 0.72);
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+    }
+
+    .char-card.selected {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.45);
+    }
+
+    .avatar-box {
+      width: 48px;
+      height: 56px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .char-info {
+      min-width: 0;
+    }
+
+    .char-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f8fafc;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .char-build {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .char-perk {
+      font-size: 10.5px;
+      color: #38bdf8;
+      margin-top: 2px;
+      font-weight: 600;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .opt-btn {
+      padding: 9px 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: rgba(30, 41, 59, 0.75);
+      color: #cbd5e1;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .opt-btn.active {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      color: #ffffff;
+    }
+
+    .records-box {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      padding: 9px 12px;
+      margin-bottom: 12px;
+      font-size: 12.5px;
+      color: #94a3b8;
+    }
+
+    .records-box strong {
+      color: #fbbf24;
+    }
+
+    .primary-btn {
+      width: 100%;
+      padding: 13px 18px;
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #07101c;
+      background: linear-gradient(90deg, #38bdf8, #4ade80);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    @media (max-width: 768px) {
+      .badge {
+        padding: 5px 9px;
+        font-size: 11.5px;
+        border-radius: 9px;
+      }
+
+      .steps-strip {
+        top: 52px;
+        gap: 4px;
+      }
+
+      .step-chip {
+        font-size: 10.5px;
+        padding: 3px 7px;
+      }
+
+      .bottom-panel {
+        bottom: 8px;
+        padding: 10px 12px;
+        border-radius: 14px;
+      }
+
+      .stage-title {
+        font-size: 13.5px;
+      }
+
+      .stage-sub {
+        font-size: 11px;
+      }
+
+      .telemetry {font-size: 11px;
+      }
+
+      .joystick-zone {
+        width: 104px;
+        height: 104px;
+        left: 14px;
+        bottom: 118px;
+      }
+
+      .joystick-knob {
+        width: 40px;
+        height: 40px;
+        margin-left: -20px;
+        margin-top: -20px;
+      }
+
+      .mobile-actions {
+        right: 14px;
+        bottom: 118px;
+      }
+
+      .mobile-work-btn {
+        width: 82px;
+        height: 82px;
+        font-size: 11.5px;
+      }
+
+      .roster-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="crosshair" id="crosshair"></div>
+
+  <div class="top-bar">
+    <div class="hud-cluster">
+      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.4</strong></div>
+      <div class="badge fighter-hud">
+        <div class="hud-avatar" id="hudAvatar"></div>
+        <div>Боец: <strong id="hudCharName">Николаев Михаил</strong></div>
+      </div>
+      <div class="badge">Стык: <strong id="jointCounter">1 / 3</strong></div>
+      <div class="badge norm" id="normBadge">Норматив: <strong id="normLabel">Свободный</strong></div>
+    </div>
+    <div class="hud-cluster">
+      <div class="badge timer">Время: <strong id="timer">00.0 с</strong></div>
+      <div class="badge">Качество: <strong id="qualityScore">100%</strong></div>
+      <button type="button" class="sound-btn" id="soundBtn">Звук: ВКЛ</button>
+    </div>
+  </div>
+
+  <div class="steps-strip" id="stepsStrip"></div>
+
+  <div class="bottom-panel">
+    <div class="stage-header">
+      <div class="stage-title" id="stageTitle">1. Очистка поверхности</div>
+      <div class="stage-sub" id="stageHint">Наведи прицел на стык и удерживай работу</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="telemetry">
+      <div id="actionStatus">Ожидание действия...</div>
+      <div class="temp-pill" id="tempPill">Температура: 20 °C (цель: 90 °C)</div>
+      <div class="bubbles-pill" id="bubblesPill">Пузыри: 0</div>
+    </div>
+  </div>
+
+  <!-- Сенсорное управление для телефона -->
+  <div class="touch-controls active" id="touchControls">
+    <div class="joystick-zone" id="joystickZone">
+      <div class="joystick-knob" id="joystickKnob"></div>
+    </div>
+    <div class="mobile-actions">
+      <div class="mobile-sub-btns">
+        <button type="button" class="mobile-mini-btn" id="mobileJumpBtn">ПРЫЖОК</button>
+        <button type="button" class="mobile-mini-btn" id="mobilePauseBtn">ПАУЗА</button>
+      </div>
+      <button type="button" class="mobile-work-btn" id="mobileWorkBtn">РАБОТА</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h1 id="modalTitle">ЛНИТОиЗА — Выбор бойца</h1>
+      <p id="modalDesc">
+        Выбери бойца бригады. Зачистка выполняется шлифмашинкой, а термоусадочная манжета усаживается от середины к краям до появления белого клея на концах.
+      </p>
+
+      <div class="section-label">Бригада (10 персонажей)</div>
+      <div class="roster-grid" id="rosterGrid"></div>
+
+      <div class="section-label">Параметры смены</div>
+      <div class="options-grid">
+        <button type="button" class="opt-btn active" id="modeFreeBtn">Режим: Тренировка</button>
+        <button type="button" class="opt-btn" id="modeNormBtn">Режим: Норматив (140 с)</button>
+        <button type="button" class="opt-btn" id="joints1Btn">Участок: 1 стык</button>
+        <button type="button" class="opt-btn active" id="joints3Btn">Участок: 3 стыка</button>
+      </div>
+
+      <div class="records-box">
+        Лучшее время (3 стыка): <strong id="bestTime">—</strong> • Лучшее качество: <strong id="bestQuality">—</strong>
+      </div>
+
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
+        <strong>ПК:</strong> WASD — ходьба, мышь — обзор, зажатая ЛКМ — работа шлифмашинкой/горелкой/роликом, Space — прыжок.<br /><strong>Телефон:</strong> левый стик — ходьба, свайп по экрану — обзор, кнопка «РАБОТА» — удержание инструмента.
+      </p>
+      <button type="button" class="primary-btn" id="startBtn">Начать изоляцию</button>
+    </div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.169.0/build/three.module.js"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    // Определение сенсорного устройства
+    const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    if (isTouchDevice) {
+      document.body.classList.add('touch-device');
+    }
+
+    // --- Список персонажей (10 бойцов) ---
+    const CHARACTERS = [
+      {
+        id: 'nikolaev',
+        name: 'Николаев Михаил',
+        buildText: 'Большой, крупный',
+        perkText: '+18% мощная шлифовка и прокат',
+        bodyScaleX: 1.35,
+        bodyScaleY: 1.12,
+        speedMult: 0.94,
+        workMult: 1.18,
+        heatControlMult: 1.0,
+        jacketColor: '#ea580c',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'maslov',
+        name: 'Маслов Дмитрий',
+        buildText: 'Низкий, широкий',
+        perkText: '+20% устойчивый нагрев у 90 °C',
+        bodyScaleX: 1.32,
+        bodyScaleY: 0.86,
+        speedMult: 0.92,
+        workMult: 1.05,
+        heatControlMult: 1.22,
+        jacketColor: '#0284c7',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'korelov',
+        name: 'Корелов Роман',
+        buildText: 'Нормальное телосложение, очки',
+        perkText: '+25% точный контроль температуры',
+        bodyScaleX: 1.0,
+        bodyScaleY: 1.0,
+        speedMult: 1.0,
+        workMult: 1.05,
+        heatControlMult: 1.25,
+        jacketColor: '#2563eb',
+        headGear: 'helmet',
+        glasses: true,
+        gingerBalding: false
+      },
+      {
+        id: 'agafonov',
+        name: 'Агафонов Андрей',
+        buildText: 'Средний рост, в шапке',
+        perkText: '+12% скорость в котловане и усадки',
+        bodyScaleX: 1.02,
+        bodyScaleY: 1.0,
+        speedMult: 1.12,
+        workMult: 1.12,
+        heatControlMult: 1.0,
+        jacketColor: '#d97706',
+        headGear: 'beanie',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'babinets',
+        name: 'Бабинец Александр',
+        buildText: 'Средний рост',
+        perkText: '+10% сбалансированная работа',
+        bodyScaleX: 1.0,
+        bodyScaleY: 1.0,
+        speedMult: 1.04,
+        workMult: 1.1,
+        heatControlMult: 1.08,
+        jacketColor: '#0d9488',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'vatiska',
+        name: 'Ватиска Роман',
+        buildText: 'Накаченный',
+        perkText: '+20% быстрая очистка и ролик',
+        bodyScaleX: 1.24,
+        bodyScaleY: 1.05,
+        speedMult: 1.03,
+        workMult: 1.2,
+        heatControlMult: 1.0,
+        jacketColor: '#e11d48',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'muzyka',
+        name: 'Музыка Вадим',
+        buildText: 'Накаченный',
+        perkText: '+20% быстрая шлифовка и усадка',
+        bodyScaleX: 1.25,
+        bodyScaleY: 1.04,
+        speedMult: 1.02,
+        workMult: 1.2,
+        heatControlMult: 1.0,
+        jacketColor: '#7c3aed',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'zimin_vitaliy',
+        name: 'Зимин Виталий',
+        buildText: 'Длинный и тонкий',
+        perkText: '+18% быстрый шаг по котловану',
+        bodyScaleX: 0.78,
+        bodyScaleY: 1.18,
+        speedMult: 1.18,
+        workMult: 1.04,
+        heatControlMult: 1.06,
+        jacketColor: '#16a34a',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },{
+        id: 'zimin_vadim',
+        name: 'Зимин Вадим',
+        buildText: 'Среднее телосложение',
+        perkText: '+12% стабильное качество',
+        bodyScaleX: 1.0,
+        bodyScaleY: 1.0,
+        speedMult: 1.05,
+        workMult: 1.1,
+        heatControlMult: 1.12,
+        jacketColor: '#ca8a04',
+        headGear: 'helmet',
+        glasses: false,
+        gingerBalding: false
+      },
+      {
+        id: 'yakovlev',
+        name: 'Яковлев Роман',
+        buildText: 'Рыжие волосы, лысый спереди',
+        perkText: '+16% хладнокровный контроль нагрева',
+        bodyScaleX: 1.04,
+        bodyScaleY: 1.0,
+        speedMult: 1.04,
+        workMult: 1.12,
+        heatControlMult: 1.18,
+        jacketColor: '#c2410c',
+        headGear: 'none',
+        glasses: false,
+        gingerBalding: true
+      }
+    ];
+
+    function buildAvatarSVG(char) {
+      const shoulderHalfW = 14 * char.bodyScaleX;
+      const torsoTopY = char.headGear === 'beanie' ? 24 : 26;
+      const torsoH = 22 * char.bodyScaleY;
+      const headY = char.headGear === 'beanie' ? 16 : 18;
+      const headR = char.buildText.includes('крупный') ? 7.5 : 6.5;
+
+      let headTopSVG = '';
+      if (char.gingerBalding) {
+        headTopSVG = `
+          <path d="M ${26 - headR - 0.8} ${headY - 1}
+                   C ${26 - headR - 1.5} ${headY - 8}, ${26 - headR + 1} ${headY - 9.5}, ${26 - headR + 3.5} ${headY - 7}
+                   C ${26 - headR + 1.5} ${headY - 4.5}, ${26 - headR + 0.8} ${headY - 2}, ${26 - headR + 0.5} ${headY + 1.5} Z"
+                fill="#ea580c"/>
+          <path d="M ${26 + headR + 0.8} ${headY - 1}
+                   C ${26 + headR + 1.5} ${headY - 8}, ${26 + headR - 1} ${headY - 9.5}, ${26 + headR - 3.5} ${headY - 7}
+                   C ${26 + headR - 1.5} ${headY - 4.5}, ${26 + headR - 0.8} ${headY - 2}, ${26 + headR - 0.5} ${headY + 1.5} Z"
+                fill="#ea580c"/>
+          <path d="M ${26 - headR + 2.5} ${headY - 5.5} Q 26 ${headY - 8.5} ${26 + headR - 2.5} ${headY - 5.5}"
+                fill="none" stroke="#f8fafc" stroke-width="1.1" opacity="0.55"/>
+        `;
+      } else if (char.headGear === 'beanie') {
+        headTopSVG = `
+          <path d="M ${26 - headR} ${headY - 1} Q 26 ${headY - 12} ${26 + headR} ${headY - 1} Z" fill="#38bdf8"/>
+          <rect x="${26 - headR - 0.5}" y="${headY - 3}" width="${headR * 2 + 1}" height="3.2" rx="1.5" fill="#0284c7"/>
+        `;
+      } else {
+        headTopSVG = `
+          <path d="M ${26 - headR - 1} ${headY - 1} Q 26 ${headY - 11} ${26 + headR + 1} ${headY - 1} Z" fill="#facc15"/>
+          <rect x="${26 - headR - 2}" y="${headY - 1.5}" width="${headR * 2 + 4}" height="2.4" rx="1" fill="#eab308"/>
+        `;
+      }
+
+      const glassesSVG = char.glasses
+        ? `<rect x="${26 - headR + 0.5}" y="${headY - 1}" width="5" height="3.5" rx="0.8" fill="none" stroke="#e0f2fe" stroke-width="1.3"/>
+           <rect x="${27.2}" y="${headY - 1}" width="5" height="3.5" rx="0.8" fill="none" stroke="#e0f2fe" stroke-width="1.3"/>
+           <line x1="${26 - headR + 5.5}" y1="${headY + 0.5}" x2="${27.2}" y2="${headY + 0.5}" stroke="#e0f2fe" stroke-width="1.2"/>`
+        : '';
+
+      return `
+        <svg viewBox="0 0 52 60" width="46" height="54" aria-hidden="true">
+          <ellipse cx="26" cy="56" rx="${Math.max(10, shoulderHalfW)}" ry="2.5" fill="rgba(0,0,0,0.45)"/>
+          <path d="M ${26 - shoulderHalfW} ${torsoTopY + torsoH}
+                   L ${26 - shoulderHalfW * 0.9} ${torsoTopY}
+                   Q 26 ${torsoTopY - 3} ${26 + shoulderHalfW * 0.9} ${torsoTopY}
+                   L ${26 + shoulderHalfW} ${torsoTopY + torsoH} Z"
+                fill="${char.jacketColor}"/>
+          <rect x="${26 - shoulderHalfW * 0.88}" y="${torsoTopY + torsoH * 0.45}" width="${shoulderHalfW * 1.76}" height="3.2" fill="#e2e8f0" opacity="0.85"/>
+          <circle cx="26" cy="${headY}" r="${headR}" fill="#f1c27d"/>
+          ${glassesSVG}
+          ${headTopSVG}
+        </svg>`;
+    }
+
+    let selectedChar = CHARACTERS[0];
+    const rosterGridEl = document.getElementById('rosterGrid');
+    const hudCharNameEl = document.getElementById('hudCharName');
+    const hudAvatarEl = document.getElementById('hudAvatar');
+
+    function syncSelectedCharacterVisuals() {
+      hudCharNameEl.textContent = selectedChar.name;
+      hudAvatarEl.innerHTML = buildAvatarSVG(selectedChar);
+    }
+
+    function renderRoster() {
+      rosterGridEl.innerHTML = '';
+      CHARACTERS.forEach((char) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'char-card' + (char.id === selectedChar.id ? ' selected' : '');
+        btn.innerHTML = `
+          <div class="avatar-box">${buildAvatarSVG(char)}</div>
+          <div class="char-info">
+            <div class="char-name">${char.name}</div>
+            <div class="char-build">${char.buildText}</div>
+            <div class="char-perk">${char.perkText}</div>
+          </div>
+        `;
+        btn.addEventListener('click', () => {
+          selectedChar = char;
+          syncSelectedCharacterVisuals();
+          renderRoster();
+          rebuildSelectedWorker3D();
+        });
+        rosterGridEl.appendChild(btn);
+      });
+    }
+    renderRoster();
+    syncSelectedCharacterVisuals();
+
+    // --- Процедурные текстуры для зачищенного металла и манжеты ---
+    function createBrushedMetalTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(0, 0, 512, 512);
+
+      for (let i = 0; i < 1800; i++) {
+        const y = Math.random() * 512;
+        const alpha = 0.06 + Math.random() * 0.14;
+        ctx.strokeStyle = Math.random() > 0.5 ? `rgba(248,250,252,${alpha})` : `rgba(51,65,85,${alpha})`;
+        ctx.lineWidth = 0.8 + Math.random() * 1.4;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(512, y + (Math.random() - 0.5) * 3);
+        ctx.stroke();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(2, 2);
+      return tex;
+    }
+
+    function createSleeveTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Текстура полимерного покрытия манжеты
+      for (let i = 0; i < 650; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.fillStyle = Math.random() > 0.5 ? 'rgba(148,163,184,0.08)' : 'rgba(15,23,42,0.22)';
+        ctx.fillRect(x, y, 4, 2);
+      }
+
+      // Маркировочная полоса термоиндикатора по центру манжеты
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.72)';
+      ctx.fillRect(248, 0, 16, 512);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(1, 2);
+      return tex;
+    }
+
+    const brushedMetalTex = createBrushedMetalTexture();
+    const sleeveTex = createSleeveTexture();
+
+    // --- Web Audio звуковой движок ---
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.lastTick = 0;
+        this.lastWarn = 0;
+      }
+
+      ensureCtx() {
+        if (!this.enabled) return null;
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume().catch(() => {});
+        }
+        return this.ctx;
+      }
+
+      playWorkTick(kind) {
+        const ctx = this.ensureCtx();
+        if (!ctx) return;
+        const now = performance.now();
+        if (now - this.lastTick < 75) return;
+        this.lastTick = now;const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        if (kind === 'grinder') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(260 + Math.random() * 90, t);
+          gain.gain.setValueAtTime(0.025, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
+        } else if (kind === 'torch') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(135 + Math.random() * 25, t);
+          gain.gain.setValueAtTime(0.025, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
+        } else {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(kind === 'roller' ? 220 : 320 + Math.random() * 140, t);
+          gain.gain.setValueAtTime(0.022, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
+        }
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.08);
+      }
+
+      playStageComplete() {
+        const ctx = this.ensureCtx();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t + i * 0.07);
+          gain.gain.setValueAtTime(0.05, t + i * 0.07);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.07 + 0.16);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(t + i * 0.07);
+          osc.stop(t + i * 0.07 + 0.17);
+        });
+      }
+
+      playPop() {
+        const ctx = this.ensureCtx();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, t);
+        osc.frequency.exponentialRampToValueAtTime(760, t + 0.07);
+        gain.gain.setValueAtTime(0.05, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.09);
+      }
+
+      playOverheatWarn() {
+        const ctx = this.ensureCtx();
+        if (!ctx) return;
+        const now = performance.now();
+        if (now - this.lastWarn < 450) return;
+        this.lastWarn = now;
+        const t = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(210, t);
+        gain.gain.setValueAtTime(0.035, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.15);
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    // --- Сцена, камера FPS, рендерер ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b111e);
+    scene.fog = new THREE.FogExp2(0x0b111e, 0.013);
+
+    const camera = new THREE.PerspectiveCamera(
+      72,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      160
+    );
+    camera.rotation.order = 'YXZ';
+    scene.add(camera);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    document.body.appendChild(renderer.domElement);
+
+    // --- Освещение ---
+    scene.add(new THREE.AmbientLight(0x94a3b8, 1.3));
+
+    const dirLight = new THREE.DirectionalLight(0xfffbeb, 2.2);
+    dirLight.position.set(12, 20, 14);
+    scene.add(dirLight);
+
+    const trenchLight = new THREE.PointLight(0x38bdf8, 2.6, 22);
+    trenchLight.position.set(0, 4.2, 2.2);
+    scene.add(trenchLight);
+
+    // --- Котлован, ограждения, лестница и экскаватор ---const trenchFloorY = -2.2;
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(110, 110),
+      new THREE.MeshStandardMaterial({ color: 0x3b2f24, roughness: 0.95 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = trenchFloorY;
+    scene.add(ground);
+
+    const trenchWallMat = new THREE.MeshStandardMaterial({ color: 0x4b3a2b, roughness: 0.9 });
+    const northBank = new THREE.Mesh(new THREE.BoxGeometry(42, 2.4, 5), trenchWallMat);
+    northBank.position.set(0, -1.0, -7.8);
+    const southBank = northBank.clone();
+    southBank.position.z = 7.8;
+    const westBank = new THREE.Mesh(new THREE.BoxGeometry(5, 2.4, 21), trenchWallMat);
+    westBank.position.set(-18.5, -1.0, 0);
+    const eastBank = westBank.clone();
+    eastBank.position.x = 18.5;
+    scene.add(northBank, southBank, westBank, eastBank);
+
+    const fenceMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.5 });
+    const postGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.1, 8);
+    for (let x = -14; x <= 14; x += 4) {
+      const postN = new THREE.Mesh(postGeo, fenceMat);
+      postN.position.set(x, 0.75, -5.2);
+      const postS = postN.clone();
+      postS.position.z = 5.2;
+      scene.add(postN, postS);
+    }
+
+    const railN = new THREE.Mesh(new THREE.BoxGeometry(28.4, 0.08, 0.08), fenceMat);
+    railN.position.set(0, 1.1, -5.2);
+    const railS = railN.clone();
+    railS.position.z = 5.2;
+    scene.add(railN, railS);
+
+    const ladderGroup = new THREE.Group();
+    const railMat = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.5, roughness: 0.4 });
+    for (const offsetX of [-0.35, 0.35]) {
+      const sideRail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 3.1, 8), railMat);
+      sideRail.position.set(offsetX, 0, 0);
+      ladderGroup.add(sideRail);
+    }
+    for (let y = -1.1; y <= 1.1; y += 0.44) {
+      const step = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.7, 8), railMat);
+      step.rotation.z = Math.PI / 2;
+      step.position.set(0, y, 0);
+      ladderGroup.add(step);
+    }
+    ladderGroup.position.set(-12.5, -0.75, -4.6);
+    ladderGroup.rotation.x = 0.25;
+    scene.add(ladderGroup);
+
+    // 3D-экскаватор
+    const excavator = new THREE.Group();
+    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45 });
+    const boomMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.5 });
+
+    const trackL = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.55, 0.55), trackMat);
+    trackL.position.set(0, 0.28, -0.95);
+    const trackR = trackL.clone();
+    trackR.position.z = 0.95;
+
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 2.2), bodyMat);
+    hull.position.set(-0.2, 1.05, 0);
+
+    const boomPivot = new THREE.Group();
+    boomPivot.position.set(0.8, 1.35, 0);
+    const boom = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.35, 0.4), boomMat);
+    boom.position.set(1.5, 0.9, 0);
+    boom.rotation.z = 0.52;
+
+    const bucket = new THREE.Mesh(
+      new THREE.BoxGeometry(0.9, 0.75, 0.95),
+      new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.6, roughness: 0.4 })
+    );
+    bucket.position.set(3.15, 1.1, 0);
+    bucket.rotation.z = -0.45;
+
+    boomPivot.add(boom, bucket);
+    excavator.add(trackL, trackR, hull, boomPivot);
+    excavator.position.set(12.2, 0.2, -9.8);
+    excavator.rotation.y = -2.35;
+    scene.add(excavator);
+
+    // --- Рабочие в котловане ---
+    const workers = [];
+    function createWorker(x, y, z, rotY, jacketHex) {
+      const group = new THREE.Group();
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.34, 1.05, 12),
+        new THREE.MeshStandardMaterial({ color: jacketHex, roughness: 0.6 })
+      );
+      body.position.y = 0.65;
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(0.22, 12, 12),new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
+      );
+      head.position.y = 1.38;
+      const helmet = new THREE.Mesh(
+        new THREE.SphereGeometry(0.25, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
+        new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.35 })
+      );
+      helmet.position.y = 1.43;
+      const armR = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 0.55, 8),
+        new THREE.MeshStandardMaterial({ color: jacketHex, roughness: 0.6 })
+      );
+      armR.position.set(0.36, 0.85, 0.18);
+      armR.rotation.x = -0.7;
+      group.add(body, head, helmet, armR);
+      group.position.set(x, y, z);
+      group.rotation.y = rotY;
+      scene.add(group);
+      workers.push({ group, head, armR, baseY: y, phase: Math.random() * Math.PI * 2 });
+    }
+
+    createWorker(-10.5, trenchFloorY, 2.7, 0.75, 0xf97316);
+    createWorker(2.2, trenchFloorY, -2.5, -2.2, 0x0284c7);
+    createWorker(10.8, trenchFloorY, 3.0, -0.85, 0xeab308);
+
+    // --- 3D-фигура выбранного персонажа в котловане ---
+    const JOINT_X = [-7.5, 0, 7.5];
+    let currentJointIndex = 0;
+    let selectedWorker3D = null;
+
+    function rebuildSelectedWorker3D() {
+      if (selectedWorker3D) {
+        scene.remove(selectedWorker3D.group);
+        selectedWorker3D = null;
+      }
+
+      const char = selectedChar;
+      const group = new THREE.Group();
+
+      const torsoH = 1.02 * char.bodyScaleY;
+      const torsoRTop = 0.27 * char.bodyScaleX;
+      const torsoRBot = 0.33 * char.bodyScaleX;
+      const torsoCenterY = 0.52 + torsoH * 0.5;
+
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(torsoRTop, torsoRBot, torsoH, 14),
+        new THREE.MeshStandardMaterial({ color: char.jacketColor, roughness: 0.55 })
+      );
+      body.position.y = torsoCenterY;
+      group.add(body);
+
+      const legL = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11 * char.bodyScaleX, 0.11 * char.bodyScaleX, 0.55, 8),
+        new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })
+      );
+      legL.position.set(-0.13 * char.bodyScaleX, 0.25, 0);
+      const legR = legL.clone();
+      legR.position.x = 0.13 * char.bodyScaleX;
+      group.add(legL, legR);
+
+      const headR = char.buildText.includes('крупный') ? 0.24 : 0.21;
+      const headY = torsoCenterY + torsoH * 0.5 + headR + 0.04;
+
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(headR, 14, 14),
+        new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
+      );
+      head.position.y = headY;
+      group.add(head);
+
+      if (char.glasses) {
+        const glassMat = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, metalness: 0.7, roughness: 0.15 });
+        const lensGeo = new THREE.BoxGeometry(0.085, 0.055, 0.02);
+        const lensL = new THREE.Mesh(lensGeo, glassMat);
+        lensL.position.set(-0.065, headY + 0.01, headR + 0.005);
+        const lensR = lensL.clone();
+        lensR.position.x = 0.065;
+        const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.02, 0.02), glassMat);
+        bridge.position.set(0, headY + 0.015, headR + 0.005);
+        group.add(lensL, lensR, bridge);
+      }
+
+      if (char.gingerBalding) {
+        const gingerMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.75 });
+        const sideHairL = new THREE.Mesh(
+          new THREE.SphereGeometry(headR * 0.92, 12, 10, Math.PI * 0.55, Math.PI * 0.65, 0.2, Math.PI * 0.55),
+          gingerMat
+        );
+        sideHairL.position.set(-0.02, headY + 0.02, -0.02);
+        const sideHairR = sideHairL.clone();
+        sideHairR.rotation.y = Math.PI;
+        sideHairR.position.x = 0.02;
+        group.add(sideHairL, sideHairR);
+      } else if (char.headGear === 'beanie') {
+        const beanie = new THREE.Mesh(
+          new THREE.SphereGeometry(headR * 1.05, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.58),
+          new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.65 })
+        );beanie.position.y = headY + 0.02;
+        group.add(beanie);
+      } else {
+        const helmet = new THREE.Mesh(
+          new THREE.SphereGeometry(headR * 1.12, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.55),
+          new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.35 })
+        );
+        helmet.position.y = headY + 0.03;
+        group.add(helmet);
+      }
+
+      const armR = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08 * char.bodyScaleX, 0.08 * char.bodyScaleX, 0.52, 8),
+        new THREE.MeshStandardMaterial({ color: char.jacketColor, roughness: 0.55 })
+      );
+      armR.position.set(torsoRTop + 0.08, torsoCenterY + 0.08, 0.16);
+      armR.rotation.x = -0.8;
+      group.add(armR);
+
+      group.position.set(JOINT_X[currentJointIndex] + 1.45, trenchFloorY, -1.65);
+      group.lookAt(JOINT_X[currentJointIndex], 0.8, 0);
+      scene.add(group);
+      selectedWorker3D = { group, armR, baseY: trenchFloorY, phase: 0 };
+    }
+
+    rebuildSelectedWorker3D();
+
+    // --- Трубопровод и детальный узел стыка (шлифовка + манжета + белый клей на краях) ---
+    const pipeRadius = 1.05;
+    const pipeCenterY = 0.8;
+    const pipeLength = 28;
+
+    const pipe = new THREE.Mesh(
+      new THREE.CylinderGeometry(pipeRadius, pipeRadius, pipeLength, 48, 1, true),
+      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.78, roughness: 0.32 })
+    );
+    pipe.rotation.z = Math.PI / 2;
+    pipe.position.set(0, pipeCenterY, 0);
+    scene.add(pipe);
+
+    const seamMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.88, roughness: 0.22 });
+    for (const jx of JOINT_X) {
+      const seam = new THREE.Mesh(new THREE.TorusGeometry(pipeRadius + 0.02, 0.06, 14, 48), seamMat);
+      seam.rotation.y = Math.PI / 2;
+      seam.position.set(jx, pipeCenterY, 0);
+      scene.add(seam);
+    }
+
+    const activeJointGroup = new THREE.Group();
+    activeJointGroup.position.set(JOINT_X[0], pipeCenterY, 0);
+    scene.add(activeJointGroup);
+
+    // 1. Грязь / старое покрытие
+    const dirtMat = new THREE.MeshStandardMaterial({
+      color: 0x5c4028,
+      roughness: 0.95,
+      transparent: true,
+      opacity: 0.92
+    });
+    const dirtLayer = new THREE.Mesh(
+      new THREE.CylinderGeometry(pipeRadius + 0.012, pipeRadius + 0.012, 2.6, 40, 1, true),
+      dirtMat
+    );
+    dirtLayer.rotation.z = Math.PI / 2;
+    activeJointGroup.add(dirtLayer);
+
+    // 2. Детальная зачищенная поверхность (шлифованный металл + шлифовальные кольца)
+    const cleanedMat = new THREE.MeshStandardMaterial({
+      map: brushedMetalTex,
+      color: 0xcbeafe,
+      emissive: 0x0ea5e9,
+      emissiveIntensity: 0.22,
+      metalness: 0.88,
+      roughness: 0.18,
+      transparent: true,
+      opacity: 0.0
+    });
+    const cleanedLayer = new THREE.Mesh(
+      new THREE.CylinderGeometry(pipeRadius + 0.008, pipeRadius + 0.008, 2.55, 44, 1, true),
+      cleanedMat
+    );
+    cleanedLayer.rotation.z = Math.PI / 2;
+    activeJointGroup.add(cleanedLayer);
+
+    const grindRingMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      metalness: 0.9,
+      roughness: 0.25,
+      transparent: true,
+      opacity: 0.0
+    });
+    const grindRingL = new THREE.Mesh(new THREE.TorusGeometry(pipeRadius + 0.01, 0.018, 8, 48), grindRingMat);
+    grindRingL.rotation.y = Math.PI / 2;
+    grindRingL.position.x = -0.65;
+
+    const grindRingR = grindRingL.clone();
+    grindRingR.position.x = 0.65;
+    activeJointGroup.add(grindRingL, grindRingR);
+
+    // 3. Детальная термоусадочная манжета (центральная усаживаемая секция + левый и правый края с белым клеем)
+    const sleeveMat = new THREE.MeshStandardMaterial({
+      map: sleeveTex,
+      color: 0x1e293b,
+      roughness: 0.42,
+      metalness: 0.22,
+      transparent: true,
+      opacity: 0.0
+    });
+    const sleeveMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(pipeRadius + 0.14, pipeRadius + 0.14, 2.25, 48, 1, true),
+      sleeveMat
+    );
+    sleeveMesh.rotation.z = Math.PI / 2;activeJointGroup.add(sleeveMesh);
+
+    // Замковая полоса манжеты
+    const lockStripMat = new THREE.MeshStandardMaterial({
+      color: 0x475569,
+      roughness: 0.35,
+      metalness: 0.3,
+      transparent: true,
+      opacity: 0.0
+    });
+    const lockStrip = new THREE.Mesh(
+      new THREE.CylinderGeometry(pipeRadius + 0.155, pipeRadius + 0.155, 0.22, 48, 1, true),
+      lockStripMat
+    );
+    lockStrip.rotation.z = Math.PI / 2;
+    activeJointGroup.add(lockStrip);
+
+    // Белый клей по левому и правому краям манжеты (выступает при усадке от середины к краям)
+    const whiteGlueMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      emissive: 0xe2e8f0,
+      emissiveIntensity: 0.25,
+      roughness: 0.2,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 0.0
+    });
+    const glueLeft = new THREE.Mesh(
+      new THREE.TorusGeometry(pipeRadius + 0.03, 0.026, 12, 48),
+      whiteGlueMat
+    );
+    glueLeft.rotation.y = Math.PI / 2;
+    glueLeft.position.x = -1.14;
+
+    const glueRight = glueLeft.clone();
+    glueRight.position.x = 1.14;
+    activeJointGroup.add(glueLeft, glueRight);
+
+    const doneMarkers = JOINT_X.map((jx) => {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(pipeRadius + 0.05, 0.035, 10, 48),
+        new THREE.MeshBasicMaterial({ color: 0x4ade80, visible: false })
+      );
+      ring.rotation.y = Math.PI / 2;
+      ring.position.set(jx, pipeCenterY, 0);
+      scene.add(ring);
+      return ring;
+    });
+
+    // --- Инструменты в руке игрока ---
+    const handRoot = new THREE.Group();
+    handRoot.position.set(0.34, -0.28, -0.52);
+    camera.add(handRoot);
+
+    // Щётка для первичной очистки
+    const handBrush = new THREE.Group();
+    const hbHandle = new THREE.Mesh(
+      new THREE.BoxGeometry(0.08, 0.08, 0.42),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.5 })
+    );
+    const hbHead = new THREE.Mesh(
+      new THREE.BoxGeometry(0.16, 0.07, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.3 })
+    );
+    hbHead.position.set(0, -0.04, -0.18);
+    handBrush.add(hbHandle, hbHead);
+    handRoot.add(handBrush);
+
+    // Шлифмашинка для зачистки поверхности
+    const handGrinder = new THREE.Group();
+    const hgBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.052, 0.058, 0.32, 14),
+      new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.35, metalness: 0.3 })
+    );
+    hgBody.rotation.x = Math.PI / 2.2;
+    const hgDisc = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.095, 0.095, 0.018, 20),
+      new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.85, roughness: 0.25 })
+    );
+    hgDisc.position.set(0, -0.045, -0.17);
+    const hgGuard = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.102, 0.102, 0.025, 16, 1, true, 0, Math.PI),
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide })
+    );
+    hgGuard.position.set(0, -0.032, -0.17);
+    handGrinder.add(hgBody, hgDisc, hgGuard);
+    handGrinder.visible = false;
+    handRoot.add(handGrinder);
+
+    // Горелка
+    const handTorch = new THREE.Group();
+    const htGrip = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.05, 0.4, 10),
+      new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.7, roughness: 0.35 })
+    );
+    htGrip.rotation.x = Math.PI / 2.2;
+    const htNozzle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.025, 0.04, 0.16, 10),
+      new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.85, roughness: 0.25 })
+    );
+    htNozzle.rotation.x = Math.PI / 2.2;
+    htNozzle.position.set(0, 0.03, -0.22);
+
+    const htFlame = new THREE.Mesh(
+      new THREE.ConeGeometry(0.085, 0.34, 12),
+      new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.9 })
+    );
+    htFlame.rotation.x = -Math.PI / 2.2;
+    htFlame.position.set(0, 0.06, -0.38);
+    htFlame.visible = false;
+    handTorch.add(htGrip, htNozzle, htFlame);handTorch.visible = false;
+    handRoot.add(handTorch);
+
+    // Ролик
+    const handRoller = new THREE.Group();
+    const hrFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.05, 0.38),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.4 })
+    );
+    const hrCyl = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.065, 0.065, 0.2, 14),
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.3 })
+    );
+    hrCyl.rotation.z = Math.PI / 2;
+    hrCyl.position.set(0, -0.04, -0.18);
+    handRoller.add(hrFrame, hrCyl);
+    handRoller.visible = false;
+    handRoot.add(handRoller);
+
+    function syncHandModel() {
+      handBrush.visible = stageIndex === 0;
+      handGrinder.visible = stageIndex === 1;
+      handTorch.visible = stageIndex === 2 || stageIndex === 3;
+      handRoller.visible = stageIndex === 4;
+    }
+
+    // Пузыри на манжете
+    const bubbleMeshes = [];
+    const bubbleGeo = new THREE.SphereGeometry(0.11, 12, 12);
+    const bubbleMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      emissive: 0xca8a04,
+      emissiveIntensity: 0.35,
+      roughness: 0.25
+    });
+
+    function clearBubbles() {
+      for (const b of bubbleMeshes) scene.remove(b);
+      bubbleMeshes.length = 0;
+      updateBubblesLabel();
+    }
+
+    function createBubbles(count) {
+      clearBubbles();
+      const baseX = JOINT_X[currentJointIndex];
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI * 2 + Math.random() * 0.4;
+        const x = baseX + (Math.random() - 0.5) * 1.4;
+        const r = pipeRadius + 0.12;
+        const b = new THREE.Mesh(bubbleGeo, bubbleMat);
+        b.position.set(x, pipeCenterY + Math.cos(angle) * r, Math.sin(angle) * r);
+        scene.add(b);
+        bubbleMeshes.push(b);
+      }
+      updateBubblesLabel();
+    }
+
+    // --- Игрок от первого лица ---
+    const eyeHeight = 1.65;
+    const playerRadius = 0.55;
+    let yaw = 0;
+    let pitch = -0.12;
+    let velY = 0;
+    let isGrounded = true;
+    const gravity = -24;
+    const jumpSpeed = 8.5;
+    const baseWalkSpeed = 6.2;
+
+    function resetFirstPersonPlayer() {
+      camera.position.set(JOINT_X[0], trenchFloorY + eyeHeight, 3.6);
+      yaw = 0;
+      pitch = -0.14;
+      velY = 0;
+      isGrounded = true;
+      camera.rotation.y = yaw;
+      camera.rotation.x = pitch;
+    }
+
+    // --- UI и рекорды ---
+    const crosshairEl = document.getElementById('crosshair');
+    const jointCounterEl = document.getElementById('jointCounter');
+    const stepsStripEl = document.getElementById('stepsStrip');
+    const normBadgeEl = document.getElementById('normBadge');
+    const normLabelEl = document.getElementById('normLabel');
+    const timerEl = document.getElementById('timer');
+    const qualityScoreEl = document.getElementById('qualityScore');
+    const soundBtn = document.getElementById('soundBtn');
+    const stageTitleEl = document.getElementById('stageTitle');
+    const stageHintEl = document.getElementById('stageHint');
+    const progressBarEl = document.getElementById('progressBar');
+    const actionStatusEl = document.getElementById('actionStatus');
+    const tempPillEl = document.getElementById('tempPill');
+    const bubblesPillEl = document.getElementById('bubblesPill');
+    const overlayEl = document.getElementById('overlay');
+    const modalTitleEl = document.getElementById('modalTitle');
+    const modalDescEl = document.getElementById('modalDesc');
+    const modeFreeBtn = document.getElementById('modeFreeBtn');
+    const modeNormBtn = document.getElementById('modeNormBtn');
+    const joints1Btn = document.getElementById('joints1Btn');
+    const joints3Btn = document.getElementById('joints3Btn');
+    const bestTimeEl = document.getElementById('bestTime');
+    const bestQualityEl = document.getElementById('bestQuality');
+    const startBtn = document.getElementById('startBtn');
+
+    soundBtn.addEventListener('click', () => {
+      sound.enabled = !sound.enabled;soundBtn.textContent = sound.enabled ? 'Звук: ВКЛ' : 'Звук: ВЫКЛ';
+      soundBtn.classList.toggle('muted', !sound.enabled);
+    });
+
+    const STAGES = [
+      { short: '1. Очистка', title: '1. Очистка поверхности', hint: 'Наведи прицел на стык и удерживай работу, чтобы снять грязь' },
+      { short: '2. Шлифмашинка', title: '2. Зачистка шлифмашинкой', hint: 'Удерживай работу шлифмашинкой до блеска зачищенного металла' },
+      { short: '3. Нагрев 90 °C', title: '3. Нагрев горелкой до 90 °C', hint: 'Нагрей стык до ~90 °C без перегрева выше 105 °C' },
+      { short: '4. Усадка', title: '4. Усадка манжеты от середины к краям', hint: 'Веди усадку от центра к краям, пока на концах не проступит белый клей' },
+      { short: '5. Ролик', title: '5. Прокатка роликом', hint: 'Удерживай работу роликом по манжете для плотного прилегания' }
+    ];
+
+    const stepChips = STAGES.map((st, idx) => {
+      const el = document.createElement('div');
+      el.className = 'step-chip' + (idx === 0 ? ' active' : '');
+      el.textContent = st.short;
+      stepsStripEl.appendChild(el);
+      return el;
+    });
+
+    let normMode = false;
+    let totalJoints = 3;
+
+    let bestTime = localStorage.getItem('lnitoizaV44BestTime');
+    let bestQuality = localStorage.getItem('lnitoizaV44BestQuality');
+
+    function renderRecords() {
+      bestTimeEl.textContent = bestTime ? `${Number(bestTime).toFixed(1)} с` : '—';
+      bestQualityEl.textContent = bestQuality ? `${bestQuality}%` : '—';
+    }
+    renderRecords();
+
+    function getNormLimit() {
+      return totalJoints === 3 ? 140 : 50;
+    }
+
+    function syncModeButtons() {
+      modeFreeBtn.classList.toggle('active', !normMode);
+      modeNormBtn.classList.toggle('active', normMode);
+      joints1Btn.classList.toggle('active', totalJoints === 1);
+      joints3Btn.classList.toggle('active', totalJoints === 3);
+      normLabelEl.textContent = normMode ? `${getNormLimit().toFixed(1)} с` : 'Свободный';
+      normBadgeEl.classList.remove('fail');
+    }
+
+    modeFreeBtn.addEventListener('click', () => { normMode = false; syncModeButtons(); });
+    modeNormBtn.addEventListener('click', () => { normMode = true; syncModeButtons(); });
+    joints1Btn.addEventListener('click', () => { totalJoints = 1; syncModeButtons(); });
+    joints3Btn.addEventListener('click', () => { totalJoints = 3; syncModeButtons(); });
+
+    let isRunning = false;
+    let isFinished = false;
+    let stageIndex = 0;
+    let stageProgress = 0;
+    let elapsed = 0;
+    let temperature = 20;
+    let quality = 100;
+    let workHeld = false;
+    let aimingAtJoint = false;
+
+    const raycaster = new THREE.Raycaster();
+    const centerNDC = new THREE.Vector2(0, 0);
+
+    function updateBubblesLabel() {
+      bubblesPillEl.textContent = `Пузыри: ${bubbleMeshes.length}`;
+    }
+
+    function updateTempLabel() {
+      const rounded = Math.round(temperature);
+      tempPillEl.textContent = `Температура: ${rounded} °C (цель: 90 °C)`;
+      tempPillEl.classList.remove('target', 'hot');
+      if (rounded > 105) {
+        tempPillEl.classList.add('hot');
+      } else if (rounded >= 85 && rounded <= 96) {
+        tempPillEl.classList.add('target');
+      }
+    }
+
+    function updateSleeveCenterToEdges(progressPct) {
+      const t = Math.min(1, Math.max(0, progressPct / 100));
+      // Усадка от середины к краям: центральный диаметр прижимается к трубе
+      const radialScale = 1.15 - t * 0.135;
+      sleeveMesh.scale.set(1, radialScale, radialScale);
+      lockStrip.scale.set(1, radialScale + 0.01, radialScale + 0.01);
+
+      // Постепенное проявление белого клея на левом и правом краях манжеты
+      const glueFactor = Math.max(0, (t - 0.25) / 0.75);
+      whiteGlueMat.opacity = glueFactor * 0.96;
+      const glueR = pipeRadius + 0.015 + (1 - glueFactor) * 0.06;
+      const glueScale = glueR / (pipeRadius + 0.03);
+      glueLeft.scale.setScalar(glueScale);
+      glueRight.scale.setScalar(glueScale);
+      glueLeft.position.x = -0.35 - t * 0.79;glueRight.position.x = 0.35 + t * 0.79;
+    }
+
+    function syncStageUI() {
+      const s = STAGES[stageIndex];
+      syncSelectedCharacterVisuals();
+      jointCounterEl.textContent = `${currentJointIndex + 1} / ${totalJoints}`;
+      stageTitleEl.textContent = s.title;
+      stageHintEl.textContent = s.hint;
+      progressBarEl.style.width = `${Math.min(100, Math.max(0, stageProgress))}%`;
+      qualityScoreEl.textContent = `${Math.max(0, Math.round(quality))}%`;
+
+      if (normMode) {
+        const left = Math.max(0, getNormLimit() - elapsed);
+        normLabelEl.textContent = `${left.toFixed(1)} с`;
+        normBadgeEl.classList.toggle('fail', left <= 15);
+      } else {
+        normLabelEl.textContent = 'Свободный';
+      }
+
+      stepChips.forEach((chip, idx) => {
+        chip.classList.remove('active', 'done');
+        if (idx < stageIndex) chip.classList.add('done');
+        else if (idx === stageIndex) chip.classList.add('active');
+      });
+
+      syncHandModel();
+    }
+
+    function prepareJoint(index) {
+      currentJointIndex = index;
+      stageIndex = 0;
+      stageProgress = 0;
+      temperature = 20;
+
+      activeJointGroup.position.x = JOINT_X[index];
+      rebuildSelectedWorker3D();
+      dirtMat.opacity = 0.92;
+      cleanedMat.opacity = 0.0;
+      grindRingMat.opacity = 0.0;
+      sleeveMat.opacity = 0.0;
+      lockStripMat.opacity = 0.0;
+      whiteGlueMat.opacity = 0.0;
+      updateSleeveCenterToEdges(0);
+      clearBubbles();
+      updateTempLabel();
+      syncStageUI();
+    }
+
+    function resetSimulation() {
+      elapsed = 0;
+      quality = 100;
+      isFinished = false;
+      doneMarkers.forEach((m) => { m.visible = false; });
+      prepareJoint(0);
+      resetFirstPersonPlayer();
+      actionStatusEl.textContent = `${selectedChar.name}: подойди к стыку и наведи прицел!`;
+      timerEl.textContent = '00.0 с';
+    }
+
+    function advanceStage() {
+      stageProgress = 0;
+      sound.playStageComplete();
+
+      if (stageIndex === 0) {
+        dirtMat.opacity = 0.0;
+        cleanedMat.opacity = 0.55;
+        grindRingMat.opacity = 0.4;
+      } else if (stageIndex === 1) {
+        cleanedMat.opacity = 0.92;
+        grindRingMat.opacity = 0.85;
+        // Надеваем манжету после зачистки трубы
+        sleeveMat.opacity = 0.92;
+        lockStripMat.opacity = 0.88;
+        updateSleeveCenterToEdges(0);
+      } else if (stageIndex === 2) {
+        createBubbles(4);
+      } else if (stageIndex === 3) {
+        updateSleeveCenterToEdges(100);
+        if (bubbleMeshes.length === 0) createBubbles(2);
+      }
+
+      if (stageIndex < STAGES.length - 1) {
+        stageIndex += 1;
+        syncStageUI();
+      } else {
+        updateSleeveCenterToEdges(100);
+        clearBubbles();
+        doneMarkers[currentJointIndex].visible = true;
+
+        if (currentJointIndex + 1 < totalJoints) {
+          prepareJoint(currentJointIndex + 1);
+          actionStatusEl.textContent = `Стык ${currentJointIndex} готов! Иди к стыку ${currentJointIndex + 1} (x = ${JOINT_X[currentJointIndex + 1]})`;
+        } else {
+          finishGame(true);
+        }
+      }
+    }
+
+    function showPauseOverlay() {
+      if (isFinished) return;
+      isRunning = false;
+      workHeld = false;
+      htFlame.visible = false;
+      mobileWorkBtn.classList.remove('pressed');
+      modalTitleEl.textContent = `Пауза — ${selectedChar.name}`;
+      modalDescEl.textContent = 'Нажми кнопку ниже, чтобы продолжить работу.';
+      startBtn.textContent = 'Продолжить';
+      overlayEl.classList.remove('hidden');
+    }
+
+    function finishGame(success) {
+      isRunning = false;
+      isFinished = true;
+      workHeld = false;
+      htFlame.visible = false;
+      mobileWorkBtn.classList.remove('pressed');
+
+      if (document.pointerLockElement === renderer.domElement) {
+        document.exitPointerLock();
+      }
+
+      if (success) {
+        stepChips.forEach((c) => {
+          c.classList.remove('active');
+          c.classList.add('done');
+        });}
+
+      const finalQuality = Math.max(0, Math.round(quality));
+      if (success && totalJoints === 3) {
+        if (!bestTime || elapsed < Number(bestTime)) {
+          bestTime = elapsed.toFixed(1);
+          localStorage.setItem('lnitoizaV44BestTime', bestTime);
+        }
+        if (!bestQuality || finalQuality > Number(bestQuality)) {
+          bestQuality = String(finalQuality);
+          localStorage.setItem('lnitoizaV44BestQuality', bestQuality);
+        }
+        renderRecords();
+      }
+
+      let verdict = 'Все стыки изолированы!';
+      if (!success) verdict = 'Время норматива вышло!';
+      else if (finalQuality < 60) verdict = 'Стыки изолированы — есть замечания';
+      else if (finalQuality < 85) verdict = 'Хороший результат!';
+
+      modalTitleEl.textContent = `${verdict} (${selectedChar.name})`;
+      modalDescEl.textContent = `Время: ${elapsed.toFixed(1)} с • Среднее качество: ${finalQuality}%.`;
+      startBtn.textContent = 'Пройти снова';
+      overlayEl.classList.remove('hidden');
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (isFinished || (elapsed === 0 && stageIndex === 0 && stageProgress === 0)) {
+        resetSimulation();
+      }
+      overlayEl.classList.add('hidden');
+      if (!isTouchDevice && renderer.domElement.requestPointerLock) {
+        renderer.domElement.requestPointerLock();
+      } else {
+        isRunning = true;
+        lastTime = performance.now();
+      }
+    });
+
+    document.addEventListener('pointerlockchange', () => {
+      if (isTouchDevice) return;
+      const locked = document.pointerLockElement === renderer.domElement;
+      if (locked && !isFinished) {
+        isRunning = true;
+        overlayEl.classList.add('hidden');
+        lastTime = performance.now();
+      } else if (!locked && isRunning && !isFinished) {
+        showPauseOverlay();
+      }
+    });
+
+    // --- Управление ПК (клавиатура + мышь) ---
+    const keys = new Set();
+
+    window.addEventListener('keydown', (e) => {
+      keys.add(e.code);
+      if (e.code === 'Space' && isRunning && isGrounded) {
+        velY = jumpSpeed;
+        isGrounded = false;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      keys.delete(e.code);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isRunning || isTouchDevice) return;
+      const sensitivity = 0.0021;
+      yaw -= e.movementX * sensitivity;
+      pitch -= e.movementY * sensitivity;
+      const maxPitch = Math.PI / 2 - 0.05;
+      pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
+      camera.rotation.y = yaw;
+      camera.rotation.x = pitch;
+    });
+
+    window.addEventListener('mousedown', (e) => {
+      if (e.button === 0 && isRunning && !isTouchDevice) {
+        workHeld = true;
+      }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (e.button === 0 && !isTouchDevice) {
+        workHeld = false;
+        htFlame.visible = false;
+      }
+    });
+
+    // --- Сенсорное управление для телефона ---
+    const joystickZone = document.getElementById('joystickZone');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const mobileWorkBtn = document.getElementById('mobileWorkBtn');
+    const mobileJumpBtn = document.getElementById('mobileJumpBtn');
+    const mobilePauseBtn = document.getElementById('mobilePauseBtn');
+
+    let joyTouchId = null;
+    let joyVecX = 0;
+    let joyVecY = 0;
+
+    joystickZone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      joyTouchId = t.identifier;
+    }, { passive: false });
+
+    joystickZone.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier !== joyTouchId) continue;
+        const rect = joystickZone.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const maxR = rect.width * 0.38;
+        let dx = t.clientX - cx;let dy = t.clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        if (dist > maxR) {
+          dx = (dx / dist) * maxR;
+          dy = (dy / dist) * maxR;
+        }
+        joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+        joyVecX = dx / maxR;
+        joyVecY = -dy / maxR;
+      }
+    }, { passive: false });
+
+    function resetJoystick(e) {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joyTouchId) {
+          joyTouchId = null;
+          joyVecX = 0;
+          joyVecY = 0;
+          joystickKnob.style.transform = 'translate(0px, 0px)';
+        }
+      }
+    }
+    joystickZone.addEventListener('touchend', resetJoystick);
+    joystickZone.addEventListener('touchcancel', resetJoystick);
+
+    mobileWorkBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (!isRunning) return;
+      workHeld = true;
+      mobileWorkBtn.classList.add('pressed');
+    }, { passive: false });
+
+    const releaseMobileWork = (e) => {
+      e.preventDefault();
+      workHeld = false;
+      htFlame.visible = false;
+      mobileWorkBtn.classList.remove('pressed');
+    };
+    mobileWorkBtn.addEventListener('touchend', releaseMobileWork);
+    mobileWorkBtn.addEventListener('touchcancel', releaseMobileWork);
+
+    mobileJumpBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (isRunning && isGrounded) {
+        velY = jumpSpeed;
+        isGrounded = false;
+      }
+    }, { passive: false });
+
+    mobilePauseBtn.addEventListener('click', () => {
+      if (isRunning) showPauseOverlay();
+    });
+
+    // Свайп по экрану для поворота камеры на телефоне
+    let lookTouchId = null;
+    let lastLookX = 0;
+    let lastLookY = 0;
+
+    renderer.domElement.addEventListener('touchstart', (e) => {
+      if (!isRunning) return;
+      for (const t of e.changedTouches) {
+        if (t.identifier === joyTouchId) continue;
+        if (lookTouchId === null) {
+          lookTouchId = t.identifier;
+          lastLookX = t.clientX;
+          lastLookY = t.clientY;
+        }
+      }
+    }, { passive: false });
+
+    renderer.domElement.addEventListener('touchmove', (e) => {
+      if (!isRunning) return;
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookTouchId) {
+          const dx = t.clientX - lastLookX;
+          const dy = t.clientY - lastLookY;
+          lastLookX = t.clientX;
+          lastLookY = t.clientY;
+          const touchSens = 0.0048;
+          yaw -= dx * touchSens;
+          pitch -= dy * touchSens;
+          const maxPitch = Math.PI / 2 - 0.05;
+          pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
+          camera.rotation.y = yaw;
+          camera.rotation.x = pitch;
+        }
+      }
+    }, { passive: false });
+
+    const clearLookTouch = (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === lookTouchId) lookTouchId = null;
+      }
+    };
+    renderer.domElement.addEventListener('touchend', clearLookTouch);
+    renderer.domElement.addEventListener('touchcancel', clearLookTouch);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    function clampInsideTrench(x, z) {
+      const minX = -15.2;
+      const maxX = 15.2;
+      const minZ = -4.5;
+      const maxZ = 4.5;
+      let cx = Math.max(minX, Math.min(maxX, x));
+      let cz = Math.max(minZ, Math.min(maxZ, z));
+
+      if (Math.abs(cz) < pipeRadius + playerRadius && camera.position.y - eyeHeight < pipeCenterY + pipeRadius) {
+        cz = cz >= 0 ? pipeRadius + playerRadius : -(pipeRadius + playerRadius);
+      }
+      return { x: cx, z: cz };
+    }
+
+    // --- Главный цикл ---
+    let lastTime = performance.now();
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;boomPivot.rotation.z = Math.sin(now * 0.0011) * 0.08;
+      for (const w of workers) {
+        w.phase += dt * 3.2;
+        w.group.position.y = w.baseY + Math.abs(Math.sin(w.phase)) * 0.04;
+        w.head.rotation.y = Math.sin(w.phase * 0.5) * 0.25;
+        w.armR.rotation.x = -0.7 + Math.sin(w.phase * 1.4) * 0.22;
+      }
+
+      if (selectedWorker3D) {
+        selectedWorker3D.phase += dt * 3.8;
+        selectedWorker3D.group.position.y = selectedWorker3D.baseY + Math.abs(Math.sin(selectedWorker3D.phase)) * 0.035;
+        selectedWorker3D.armR.rotation.x = -0.8 + Math.sin(selectedWorker3D.phase * 1.8) * 0.28;
+      }
+
+      if (isRunning) {
+        elapsed += dt;
+        timerEl.textContent = `${elapsed.toFixed(1)} с`;
+
+        if (normMode && elapsed >= getNormLimit()) {
+          finishGame(false);
+          return;
+        }
+
+        let moveForward = joyVecY;
+        let moveRight = joyVecX;
+        if (keys.has('KeyW') || keys.has('ArrowUp')) moveForward += 1;
+        if (keys.has('KeyS') || keys.has('ArrowDown')) moveForward -= 1;
+        if (keys.has('KeyD') || keys.has('ArrowRight')) moveRight += 1;
+        if (keys.has('KeyA') || keys.has('ArrowLeft')) moveRight -= 1;
+
+        const forwardVec = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+        const rightVec = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+        const dir = new THREE.Vector3()
+          .addScaledVector(forwardVec, moveForward)
+          .addScaledVector(rightVec, moveRight);
+
+        if (dir.lengthSq() > 0) {
+          const mag = Math.min(1, dir.length());
+          dir.normalize().multiplyScalar(baseWalkSpeed * selectedChar.speedMult * mag * dt);
+          const clamped = clampInsideTrench(camera.position.x + dir.x, camera.position.z + dir.z);
+          camera.position.x = clamped.x;
+          camera.position.z = clamped.z;
+        }
+
+        if (!isGrounded) {
+          velY += gravity * dt;
+          camera.position.y += velY * dt;
+          if (camera.position.y <= trenchFloorY + eyeHeight) {
+            camera.position.y = trenchFloorY + eyeHeight;
+            velY = 0;
+            isGrounded = true;
+          }
+        }
+
+        raycaster.setFromCamera(centerNDC, camera);
+        raycaster.far = 7.5;
+        const jointTargets = [dirtLayer, cleanedLayer, sleeveMesh, lockStrip];
+        const hits = raycaster.intersectObjects(jointTargets);
+        const onActiveJoint = hits.length > 0 && Math.abs(hits[0].point.x - JOINT_X[currentJointIndex]) <= 1.45;
+        aimingAtJoint = onActiveJoint;
+        crosshairEl.classList.toggle('locked-target', aimingAtJoint);
+
+        if (workHeld && aimingAtJoint) {
+          const pt = hits[0].point;
+          for (let i = bubbleMeshes.length - 1; i >= 0; i--) {
+            if (bubbleMeshes[i].position.distanceTo(pt) < 0.45) {
+              scene.remove(bubbleMeshes[i]);
+              bubbleMeshes.splice(i, 1);
+              updateBubblesLabel();
+              sound.playPop();
+            }
+          }
+        }
+
+        const activeWork = workHeld && aimingAtJoint;
+        htFlame.visible = activeWork && stageIndex === 2;
+        if (htFlame.visible) {
+          htFlame.scale.setScalar(0.85 + Math.random() * 0.35);
+        }
+
+        if (activeWork && stageIndex === 1) {
+          hgDisc.rotation.y += dt * 42;
+        }
+
+        if (activeWork) {
+          handRoot.position.x = 0.34 + Math.sin(now * 0.035) * 0.024;
+          handRoot.position.y = -0.28 + Math.abs(Math.cos(now * 0.035)) * 0.024;
+        } else {
+          handRoot.position.x += (0.34 - handRoot.position.x) * Math.min(1, dt * 12);
+          handRoot.position.y += (-0.28 - handRoot.position.y) * Math.min(1, dt * 12);
+        }
+
+        if (stageIndex !== 2 && temperature > 20) {
+          temperature = Math.max(20, temperature - dt * 2.2);
+          updateTempLabel();
+        }
+
+        if (!aimingAtJoint) {actionStatusEl.textContent = `Подойди ближе и наведи прицел на стык №${currentJointIndex + 1} (x = ${JOINT_X[currentJointIndex]})`;
+        } else if (stageIndex === 0) {
+          if (workHeld) {
+            stageProgress += dt * 36 * selectedChar.workMult;
+            dirtMat.opacity = Math.max(0, 0.92 * (1 - stageProgress / 100));
+            actionStatusEl.textContent = 'Очистка поверхности от загрязнений...';
+            sound.playWorkTick('clean');
+          } else {
+            actionStatusEl.textContent = 'Удерживай работу на стыке для очистки';
+          }
+          if (stageProgress >= 100) advanceStage();
+
+        } else if (stageIndex === 1) {
+          if (workHeld) {
+            stageProgress += dt * 34 * selectedChar.workMult;
+            const p = stageProgress / 100;
+            cleanedMat.opacity = Math.min(0.92, 0.55 + p * 0.37);
+            grindRingMat.opacity = Math.min(0.85, 0.4 + p * 0.45);
+            actionStatusEl.textContent = 'Шлифмашинка зачищает металл до блеска...';
+            sound.playWorkTick('grinder');
+          } else {
+            actionStatusEl.textContent = 'Удерживай работу шлифмашинкой для зачистки';
+          }
+          if (stageProgress >= 100) advanceStage();
+
+        } else if (stageIndex === 2) {
+          if (workHeld) {
+            temperature += dt * 38;
+            sound.playWorkTick('torch');
+          } else {
+            temperature = Math.max(20, temperature - dt * 10);
+          }
+          updateTempLabel();
+
+          if (temperature > 105) {
+            quality = Math.max(0, quality - dt * (18 / selectedChar.heatControlMult));
+            actionStatusEl.textContent = 'Перегрев (>105 °C)! Отпусти работу и остуди до 90 °C';
+            sound.playOverheatWarn();
+          } else if (temperature >= 85 && temperature <= 96) {
+            stageProgress += dt * 36 * selectedChar.heatControlMult;
+            actionStatusEl.textContent = 'Температура в норме (~90 °C)! Удерживай для фиксации';
+          } else {
+            actionStatusEl.textContent = `Нагрей до 90 °C (сейчас ${Math.round(temperature)} °C)`;
+          }
+
+          if (stageProgress >= 100) advanceStage();
+
+        } else if (stageIndex === 3) {
+          if (workHeld) {
+            stageProgress += dt * 28 * selectedChar.workMult;
+            updateSleeveCenterToEdges(stageProgress);
+            const glueReady = stageProgress >= 85;
+            actionStatusEl.textContent = glueReady
+              ? 'Белый клей выступает на краях манжеты! Завершаем усадку...'
+              : 'Усадка манжеты от середины к краям... следи за пузырями!';
+            sound.playWorkTick('torch');
+          } else {
+            actionStatusEl.textContent = 'Удерживай работу для усадки от середины к краям';
+          }
+
+          if (workHeld && bubbleMeshes.length < 4 && Math.random() < dt * 0.65) {
+            const angle = Math.random() * Math.PI * 2;
+            const x = JOINT_X[currentJointIndex] + (Math.random() - 0.5) * 1.3;
+            const r = pipeRadius + 0.08;
+            const b = new THREE.Mesh(bubbleGeo, bubbleMat);
+            b.position.set(x, pipeCenterY + Math.cos(angle) * r, Math.sin(angle) * r);
+            scene.add(b);
+            bubbleMeshes.push(b);
+            updateBubblesLabel();
+          }
+
+          if (stageProgress >= 100) advanceStage();
+
+        } else if (stageIndex === 4) {
+          if (workHeld) {
+            stageProgress += dt * 33 * selectedChar.workMult;
+            const t = Math.min(1, stageProgress / 100);
+            const s = 1.015 - t * 0.008;
+            sleeveMesh.scale.set(1, s, s);
+            lockStrip.scale.set(1, s + 0.01, s + 0.01);
+            actionStatusEl.textContent = 'Прокатка роликом по манжете с белым клеем...';
+            sound.playWorkTick('roller');
+          } else {
+            actionStatusEl.textContent = 'Удерживай работу для прокатки роликом';
+          }
+
+          if (bubbleMeshes.length > 0 && workHeld) {quality = Math.max(0, quality - dt * 5);
+          }
+
+          if (stageProgress >= 100) advanceStage();
+        }
+
+        syncStageUI();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
