@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ЛНИТОиЗА v4.6 FPS — Горизонтальный режим на телефоне</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>ЛНИТОиЗА v4.7 FPS — Шлифмашинка, манжета с белым клеем и мобильный режим</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,7 +13,9 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
       background: #0b101b;
       color: #f8fafc;
@@ -23,6 +25,8 @@
 
     canvas {
       display: block;
+      width: 100%;
+      height: 100%;
       touch-action: none;
     }
 
@@ -76,9 +80,9 @@
     /* Верхняя панель */
     .top-bar {
       position: fixed;
-      top: 10px;
-      left: 12px;
-      right: 12px;
+      top: max(10px, env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
@@ -161,9 +165,9 @@
     /* Индикатор этапов */
     .steps-strip {
       position: fixed;
-      top: 52px;
-      left: 12px;
-      right: 12px;
+      top: calc(max(10px, env(safe-area-inset-top)) + 42px);
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
       display: flex;
       gap: 5px;
       pointer-events: none;
@@ -172,8 +176,7 @@
     }
 
     .step-chip {
-      font-size: 11px;
-      padding: 3px 8px;
+      font-size: 11px;padding: 3px 8px;
       border-radius: 999px;
       background: rgba(15, 23, 42, 0.78);
       border: 1px solid rgba(148, 163, 184, 0.2);
@@ -185,7 +188,9 @@
       border-color: #38bdf8;
       color: #f8fafc;
       font-weight: 600;
-    }.step-chip.done {
+    }
+
+    .step-chip.done {
       background: rgba(34, 197, 94, 0.16);
       border-color: rgba(74, 222, 128, 0.5);
       color: #86efac;
@@ -194,10 +199,10 @@
     /* Нижняя панель управления этапами */
     .bottom-panel {
       position: fixed;
-      bottom: 12px;
+      bottom: max(10px, env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%);
-      width: min(740px, calc(100% - 24px));
+      width: min(740px, calc(100% - 20px));
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(148, 163, 184, 0.28);
       backdrop-filter: blur(10px);
@@ -289,12 +294,12 @@
 
     .joystick-zone {
       position: fixed;
-      left: 22px;
-      bottom: 24px;
-      width: 116px;
-      height: 116px;
+      left: max(16px, env(safe-area-inset-left));
+      bottom: calc(max(12px, env(safe-area-inset-bottom)) + 104px);
+      width: 112px;
+      height: 112px;
       border-radius: 50%;
-      background: rgba(15, 23, 42, 0.55);
+      background: rgba(15, 23, 42, 0.58);
       border: 2px solid rgba(148, 163, 184, 0.35);
       pointer-events: auto;
       touch-action: none;
@@ -304,12 +309,12 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 46px;
-      height: 46px;
-      margin-left: -23px;
-      margin-top: -23px;
+      width: 44px;
+      height: 44px;
+      margin-left: -22px;
+      margin-top: -22px;
       border-radius: 50%;
-      background: rgba(56, 189, 248, 0.75);
+      background: rgba(56, 189, 248, 0.78);
       border: 2px solid #e0f2fe;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
       pointer-events: none;
@@ -317,8 +322,8 @@
 
     .mobile-actions {
       position: fixed;
-      right: 22px;
-      bottom: 24px;
+      right: max(16px, env(safe-area-inset-right));
+      bottom: calc(max(12px, env(safe-area-inset-bottom)) + 104px);
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -326,13 +331,13 @@
     }
 
     .mobile-work-btn {
-      width: 90px;
-      height: 90px;
+      width: 88px;
+      height: 88px;
       border-radius: 50%;
       border: 2px solid rgba(74, 222, 128, 0.85);
-      background: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.32);
       color: #f8fafc;
-      font-size: 12.5px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: 0.4px;
       backdrop-filter: blur(6px);
@@ -344,9 +349,7 @@
       background: rgba(34, 197, 94, 0.75);
       color: #052e16;
       transform: scale(0.95);
-    }
-
-    .mobile-sub-btns {
+    }.mobile-sub-btns {
       display: flex;
       gap: 7px;
       justify-content: flex-end;
@@ -356,47 +359,10 @@
       padding: 7px 11px;
       border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(15, 23, 42, 0.78);
+      background: rgba(15, 23, 42, 0.82);
       color: #f8fafc;
       font-size: 11.5px;
       font-weight: 700;
-      cursor: pointer;
-    }
-
-    /* Подсказка поворота в горизонтальную ориентацию на портретных экранах */
-    .rotate-prompt {
-      display: none;
-      position: fixed;
-      inset: 0;z-index: 45;
-      background: rgba(6, 10, 18, 0.95);
-      backdrop-filter: blur(10px);
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 20px;
-      gap: 12px;
-    }
-
-    .rotate-prompt.show {
-      display: flex;
-    }
-
-    .rotate-icon {
-      font-size: 42px;
-      line-height: 1;
-      color: #38bdf8;
-    }
-
-    .rotate-skip-btn {
-      margin-top: 4px;
-      padding: 9px 16px;
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      background: rgba(30, 41, 59, 0.85);
-      color: #e2e8f0;
-      font-size: 12.5px;
-      font-weight: 600;
       cursor: pointer;
     }
 
@@ -407,7 +373,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: rgba(6, 10, 18, 0.86);
+      background: rgba(6, 10, 18, 0.88);
       backdrop-filter: blur(7px);
       z-index: 30;
       padding: 10px;
@@ -426,7 +392,7 @@
       border-radius: 18px;
       padding: 16px 18px;
       box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
-      max-height: 94vh;
+      max-height: 92vh;
       overflow-y: auto;
     }
 
@@ -454,7 +420,7 @@
 
     .roster-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
       gap: 8px;
       margin-bottom: 12px;
     }
@@ -552,7 +518,9 @@
 
     .records-box strong {
       color: #fbbf24;
-    }.primary-btn {
+    }
+
+    .primary-btn {
       width: 100%;
       padding: 12px 16px;
       font-size: 15px;
@@ -562,16 +530,8 @@
       border: none;
       border-radius: 12px;
       cursor: pointer;
-    }
-
-    /* Ландшафтный режим на телефонах */
-    @media (max-height: 520px) and (orientation: landscape) {
-      .top-bar {
-        top: 6px;
-        left: 10px;
-        right: 10px;
-      }
-
+    }/* Компактная компоновка при широком/горизонтальном экране */
+    @media (max-height: 540px) {
       .badge {
         padding: 4px 8px;
         font-size: 11px;
@@ -579,9 +539,7 @@
       }
 
       .steps-strip {
-        top: 38px;
-        left: 10px;
-        right: 10px;
+        top: calc(max(6px, env(safe-area-inset-top)) + 32px);
         gap: 4px;
       }
 
@@ -591,8 +549,8 @@
       }
 
       .bottom-panel {
-        bottom: 6px;
-        width: min(460px, calc(100% - 250px));
+        bottom: max(6px, env(safe-area-inset-bottom));
+        width: min(460px, calc(100% - 230px));
         padding: 7px 11px;
         border-radius: 12px;
       }
@@ -618,8 +576,7 @@
       .joystick-zone {
         width: 96px;
         height: 96px;
-        left: 14px;
-        bottom: 12px;
+        bottom: max(10px, env(safe-area-inset-bottom));
       }
 
       .joystick-knob {
@@ -630,8 +587,7 @@
       }
 
       .mobile-actions {
-        right: 14px;
-        bottom: 12px;
+        bottom: max(10px, env(safe-area-inset-bottom));
         gap: 6px;
       }
 
@@ -645,10 +601,6 @@
         padding: 5px 8px;
         font-size: 10.5px;
       }
-
-      .roster-grid {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
     }
   </style>
 </head>
@@ -657,7 +609,7 @@
 
   <div class="top-bar">
     <div class="hud-cluster">
-      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.6</strong></div>
+      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.7</strong></div>
       <div class="badge fighter-hud">
         <div class="hud-avatar" id="hudAvatar"></div>
         <div>Боец: <strong id="hudCharName">Николаев Михаил</strong></div>
@@ -689,7 +641,7 @@
     </div>
   </div>
 
-  <!-- Сенсорное управление для телефона (горизонтальный хват) -->
+  <!-- Сенсорное управление для телефона -->
   <div class="touch-controls active" id="touchControls">
     <div class="joystick-zone" id="joystickZone">
       <div class="joystick-knob" id="joystickKnob"></div>
@@ -703,15 +655,6 @@
     </div>
   </div>
 
-  <!-- Подсказка поворота телефона в горизонтальную ориентацию --><div class="rotate-prompt" id="rotatePrompt">
-    <div class="rotate-icon">↻ 📱</div>
-    <h2 style="font-size:19px; color:#38bdf8;">Поверни телефон горизонтально</h2>
-    <p style="max-width:340px; margin-bottom:4px;">
-      Игра адаптирована под горизонтальный экран (ландшафт) для удобного обзора котлована, трубы и управления стиком.
-    </p>
-    <button type="button" class="rotate-skip-btn" id="rotateSkipBtn">Продолжить без поворота</button>
-  </div>
-
   <div class="overlay" id="overlay">
     <div class="card">
       <h1 id="modalTitle">ЛНИТОиЗА — Выбор бойца</h1>
@@ -722,8 +665,7 @@
       <div class="section-label">Бригада (10 персонажей)</div>
       <div class="roster-grid" id="rosterGrid"></div>
 
-      <div class="section-label">Параметры смены</div>
-      <div class="options-grid">
+      <div class="section-label">Параметры смены</div><div class="options-grid">
         <button type="button" class="opt-btn active" id="modeFreeBtn">Режим: Тренировка</button>
         <button type="button" class="opt-btn" id="modeNormBtn">Режим: Норматив (140 с)</button>
         <button type="button" class="opt-btn" id="joints1Btn">Участок: 1 стык</button>
@@ -736,7 +678,7 @@
 
       <p style="font-size:12px; color:#94a3b8; margin-bottom:10px;">
         <strong>ПК:</strong> WASD — ходьба, мышь — обзор, зажатая ЛКМ — работа шлифмашинкой/горелкой/роликом, Space — прыжок.<br />
-        <strong>Телефон (горизонтально):</strong> левый стик — ходьба, свайп по экрану — обзор, кнопка «РАБОТА» — удержание инструмента.
+        <strong>Телефон:</strong> левый стик — ходьба, свайп по экрану — обзор, кнопка «РАБОТА» — удержание инструмента.
       </p>
       <button type="button" class="primary-btn" id="startBtn">Начать работу</button>
     </div>
@@ -758,43 +700,6 @@
       document.body.classList.add('touch-device');
     }
 
-    const rotatePromptEl = document.getElementById('rotatePrompt');
-    const rotateSkipBtn = document.getElementById('rotateSkipBtn');
-    let ignorePortraitPrompt = false;
-
-    function checkOrientationPrompt() {
-      if (!isTouchDevice || ignorePortraitPrompt) {
-        rotatePromptEl.classList.remove('show');
-        return;
-      }
-      const isPortrait = window.innerHeight > window.innerWidth * 1.08;
-      rotatePromptEl.classList.toggle('show', isPortrait);
-    }
-
-    rotateSkipBtn.addEventListener('click', () => {
-      ignorePortraitPrompt = true;
-      rotatePromptEl.classList.remove('show');
-    });
-
-    window.addEventListener('orientationchange', () => {
-      setTimeout(checkOrientationPrompt, 150);
-    });
-
-    async function lockLandscapeOnPhone() {
-      if (!isTouchDevice) return;
-      try {
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-          await document.documentElement.requestFullscreen();
-        }
-      } catch (_) {}
-      try {
-        if (screen.orientation && screen.orientation.lock) {
-          await screen.orientation.lock('landscape');
-        }
-      } catch (_) {}
-      checkOrientationPrompt();
-    }
-
     // --- Список персонажей (10 бойцов) ---
     const CHARACTERS = [
       {
@@ -808,7 +713,8 @@
         workMult: 1.18,
         heatControlMult: 1.0,
         jacketColor: '#ea580c',
-        headGear: 'helmet',glasses: false,
+        headGear: 'helmet',
+        glasses: false,
         gingerBalding: false
       },
       {
@@ -888,8 +794,7 @@
       },
       {
         id: 'muzyka',
-        name: 'Музыка Вадим',
-        buildText: 'Накаченный',
+        name: 'Музыка Вадим',buildText: 'Накаченный',
         perkText: '+20% быстрая шлифовка и усадка',
         bodyScaleX: 1.25,
         bodyScaleY: 1.04,
@@ -952,7 +857,8 @@
       const shoulderHalfW = 14 * char.bodyScaleX;
       const torsoTopY = char.headGear === 'beanie' ? 24 : 26;
       const torsoH = 22 * char.bodyScaleY;
-      const headY = char.headGear === 'beanie' ? 16 : 18;const headR = char.buildText.includes('крупный') ? 7.5 : 6.5;
+      const headY = char.headGear === 'beanie' ? 16 : 18;
+      const headR = char.buildText.includes('крупный') ? 7.5 : 6.5;
 
       let headTopSVG = '';
       if (char.gingerBalding) {
@@ -986,8 +892,7 @@
            <line x1="${26 - headR + 5.5}" y1="${headY + 0.5}" x2="${27.2}" y2="${headY + 0.5}" stroke="#e0f2fe" stroke-width="1.2"/>`
         : '';
 
-      return `
-        <svg viewBox="0 0 52 60" width="42" height="48" aria-hidden="true">
+      return `<svg viewBox="0 0 52 60" width="42" height="48" aria-hidden="true">
           <ellipse cx="26" cy="56" rx="${Math.max(10, shoulderHalfW)}" ry="2.5" fill="rgba(0,0,0,0.45)"/>
           <path d="M ${26 - shoulderHalfW} ${torsoTopY + torsoH}
                    L ${26 - shoulderHalfW * 0.9} ${torsoTopY}
@@ -1012,7 +917,6 @@
       hudAvatarEl.innerHTML = buildAvatarSVG(selectedChar);
     }
 
-    // --- Процедурные текстуры ---
     function createBrushedMetalTexture() {
       const c = document.createElement('canvas');
       c.width = 512;
@@ -1027,7 +931,8 @@
         ctx.lineWidth = 0.8 + Math.random() * 1.4;
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(512, y + (Math.random() - 0.5) * 3);ctx.stroke();
+        ctx.lineTo(512, y + (Math.random() - 0.5) * 3);
+        ctx.stroke();
       }
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = THREE.RepeatWrapping;
@@ -1061,7 +966,6 @@
     const brushedMetalTex = createBrushedMetalTexture();
     const sleeveTex = createSleeveTexture();
 
-    // --- Звук ---
     class SoundEngine {
       constructor() {
         this.ctx = null;
@@ -1096,8 +1000,7 @@
         if (kind === 'grinder') {
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(260 + Math.random() * 90, t);
-          gain.gain.setValueAtTime(0.025, t);
-          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
+          gain.gain.setValueAtTime(0.025, t);gain.gain.exponentialRampToValueAtTime(0.001, t + 0.065);
         } else if (kind === 'torch') {
           osc.type = 'sawtooth';
           osc.frequency.setValueAtTime(135 + Math.random() * 25, t);
@@ -1145,7 +1048,8 @@
         osc.frequency.exponentialRampToValueAtTime(760, t + 0.07);
         gain.gain.setValueAtTime(0.05, t);
         gain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
-        osc.connect(gain);gain.connect(ctx.destination);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
         osc.start(t);
         osc.stop(t + 0.09);
       }
@@ -1172,25 +1076,44 @@
 
     const sound = new SoundEngine();
 
-    // --- Сцена Three.js ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0b111e);
     scene.fog = new THREE.FogExp2(0x0b111e, 0.013);
 
-    const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 160);
+    function getViewportSize() {
+      if (window.visualViewport) {
+        return {
+          width: Math.max(1, Math.round(window.visualViewport.width)),
+          height: Math.max(1, Math.round(window.visualViewport.height))
+        };
+      }
+      return {
+        width: Math.max(1, window.innerWidth),
+        height: Math.max(1, window.innerHeight)
+      };
+    }
+
+    const initialSize = getViewportSize();
+    const camera = new THREE.PerspectiveCamera(72, initialSize.width / initialSize.height, 0.1, 160);
     camera.rotation.order = 'YXZ';
     scene.add(camera);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(initialSize.width, initialSize.height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     document.body.appendChild(renderer.domElement);
+
+    function updateViewportMetrics() {
+      const { width, height } = getViewportSize();
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+    }
 
     scene.add(new THREE.AmbientLight(0x94a3b8, 1.3));
     const dirLight = new THREE.DirectionalLight(0xfffbeb, 2.2);
     dirLight.position.set(12, 20, 14);
-    scene.add(dirLight);
-    const trenchLight = new THREE.PointLight(0x38bdf8, 2.6, 22);
+    scene.add(dirLight);const trenchLight = new THREE.PointLight(0x38bdf8, 2.6, 22);
     trenchLight.position.set(0, 4.2, 2.2);
     scene.add(trenchLight);
 
@@ -1248,7 +1171,8 @@
     scene.add(ladderGroup);
 
     const excavator = new THREE.Group();
-    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45 });
+    const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45 });
     const boomMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.5 });
 
     const trackL = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.55, 0.55), trackMat);
@@ -1286,8 +1210,7 @@
         new THREE.MeshStandardMaterial({ color: jacketHex, roughness: 0.6 })
       );
       body.position.y = 0.65;
-      const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.22, 12, 12),
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12),
         new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
       );
       head.position.y = 1.38;
@@ -1351,7 +1274,8 @@
       const headY = torsoCenterY + torsoH * 0.5 + headR + 0.04;
 
       const head = new THREE.Mesh(
-        new THREE.SphereGeometry(headR, 14, 14),new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
+        new THREE.SphereGeometry(headR, 14, 14),
+        new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
       );
       head.position.y = headY;
       group.add(head);
@@ -1383,8 +1307,7 @@
         const beanie = new THREE.Mesh(
           new THREE.SphereGeometry(headR * 1.05, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.58),
           new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.65 })
-        );
-        beanie.position.y = headY + 0.02;
+        );beanie.position.y = headY + 0.02;
         group.add(beanie);
       } else {
         const helmet = new THREE.Mesh(
@@ -1451,7 +1374,8 @@
       color: 0xcbeafe,
       emissive: 0x0ea5e9,
       emissiveIntensity: 0.22,
-      metalness: 0.88,roughness: 0.18,
+      metalness: 0.88,
+      roughness: 0.18,
       transparent: true,
       opacity: 0.0
     });
@@ -1500,8 +1424,7 @@
       opacity: 0.0
     });
     const lockStrip = new THREE.Mesh(
-      new THREE.CylinderGeometry(pipeRadius + 0.155, pipeRadius + 0.155, 0.22, 48, 1, true),
-      lockStripMat
+      new THREE.CylinderGeometry(pipeRadius + 0.155, pipeRadius + 0.155, 0.22, 48, 1, true),lockStripMat
     );
     lockStrip.rotation.z = Math.PI / 2;
     activeJointGroup.add(lockStrip);
@@ -1570,7 +1493,8 @@
       new THREE.MeshStandardMaterial({ color: 0x1e293b, side: THREE.DoubleSide })
     );
     hgGuard.position.set(0, -0.032, -0.17);
-    handGrinder.add(hgBody, hgDisc, hgGuard);handGrinder.visible = false;
+    handGrinder.add(hgBody, hgDisc, hgGuard);
+    handGrinder.visible = false;
     handRoot.add(handGrinder);
 
     const handTorch = new THREE.Group();
@@ -1609,9 +1533,7 @@
     hrCyl.position.set(0, -0.04, -0.18);
     handRoller.add(hrFrame, hrCyl);
     handRoller.visible = false;
-    handRoot.add(handRoller);
-
-    const bubbleMeshes = [];
+    handRoot.add(handRoller);const bubbleMeshes = [];
     const bubbleGeo = new THREE.SphereGeometry(0.11, 12, 12);
     const bubbleMat = new THREE.MeshStandardMaterial({
       color: 0xfacc15,
@@ -1667,7 +1589,8 @@
     const bestQualityEl = document.getElementById('bestQuality');
     const startBtn = document.getElementById('startBtn');
     const joystickZone = document.getElementById('joystickZone');
-    const joystickKnob = document.getElementById('joystickKnob');const mobileWorkBtn = document.getElementById('mobileWorkBtn');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const mobileWorkBtn = document.getElementById('mobileWorkBtn');
     const mobileJumpBtn = document.getElementById('mobileJumpBtn');
     const mobilePauseBtn = document.getElementById('mobilePauseBtn');
 
@@ -1714,8 +1637,7 @@
     }
 
     function updateTempLabel() {
-      const rounded = Math.round(temperature);
-      tempPillEl.textContent = `Температура: ${rounded} °C (цель: 90 °C)`;
+      const rounded = Math.round(temperature);tempPillEl.textContent = `Температура: ${rounded} °C (цель: 90 °C)`;
       tempPillEl.classList.remove('target', 'hot');
       if (rounded > 105) tempPillEl.classList.add('hot');
       else if (rounded >= 85 && rounded <= 96) tempPillEl.classList.add('target');
@@ -1762,7 +1684,8 @@
       progressBarEl.style.width = `${Math.min(100, Math.max(0, stageProgress))}%`;
       qualityScoreEl.textContent = `${Math.max(0, Math.round(quality))}%`;
 
-      if (normMode) {const left = Math.max(0, (totalJoints === 3 ? 140 : 50) - elapsed);
+      if (normMode) {
+        const left = Math.max(0, (totalJoints === 3 ? 140 : 50) - elapsed);
         normLabelEl.textContent = `${left.toFixed(1)} с`;
         normBadgeEl.classList.toggle('fail', left <= 15);
       } else {
@@ -1809,11 +1732,10 @@
       timerEl.textContent = '00.0 с';
     }
 
-    let bestTime = localStorage.getItem('lnitoizaV46BestTime');
-    let bestQuality = localStorage.getItem('lnitoizaV46BestQuality');
+    let bestTime = localStorage.getItem('lnitoizaV47BestTime');
+    let bestQuality = localStorage.getItem('lnitoizaV47BestQuality');
 
-    function renderRecords() {
-      bestTimeEl.textContent = bestTime ? `${Number(bestTime).toFixed(1)} с` : '—';
+    function renderRecords() {bestTimeEl.textContent = bestTime ? `${Number(bestTime).toFixed(1)} с` : '—';
       bestQualityEl.textContent = bestQuality ? `${bestQuality}%` : '—';
     }
     renderRecords();
@@ -1872,10 +1794,11 @@
       if (success && totalJoints === 3) {
         if (!bestTime || elapsed < Number(bestTime)) {
           bestTime = elapsed.toFixed(1);
-          localStorage.setItem('lnitoizaV46BestTime', bestTime);
-        }if (!bestQuality || finalQuality > Number(bestQuality)) {
+          localStorage.setItem('lnitoizaV47BestTime', bestTime);
+        }
+        if (!bestQuality || finalQuality > Number(bestQuality)) {
           bestQuality = String(finalQuality);
-          localStorage.setItem('lnitoizaV46BestQuality', bestQuality);
+          localStorage.setItem('lnitoizaV47BestQuality', bestQuality);
         }
         renderRecords();
       }
@@ -1917,8 +1840,7 @@
         syncStageUI();
       } else {
         updateSleeveCenterToEdges(100);
-        clearBubbles();
-        doneMarkers[currentJointIndex].visible = true;
+        clearBubbles();doneMarkers[currentJointIndex].visible = true;
 
         if (currentJointIndex + 1 < totalJoints) {
           prepareJoint(currentJointIndex + 1);
@@ -1931,7 +1853,7 @@
 
     function beginGameSession() {
       sound.ensureCtx();
-      lockLandscapeOnPhone();
+      updateViewportMetrics();
 
       if (isFinished || (elapsed === 0 && stageIndex === 0 && stageProgress === 0)) {
         resetSimulation();
@@ -1982,7 +1904,6 @@
     renderRoster();
     syncSelectedCharacterVisuals();
     rebuildSelectedWorker3D();
-    checkOrientationPrompt();
 
     const keys = new Set();
 
@@ -1996,7 +1917,9 @@
 
     window.addEventListener('keyup', (e) => {
       keys.delete(e.code);
-    });window.addEventListener('mousemove', (e) => {
+    });
+
+    window.addEventListener('mousemove', (e) => {
       if (!isRunning || isTouchDevice) return;
       const sensitivity = 0.0021;
       yaw -= e.movementX * sensitivity;
@@ -2045,8 +1968,7 @@
           dx = (dx / dist) * maxR;
           dy = (dy / dist) * maxR;
         }
-        joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;
-        joyVecX = dx / maxR;
+        joystickKnob.style.transform = `translate(${dx}px, ${dy}px)`;joyVecX = dx / maxR;
         joyVecY = -dy / maxR;
       }
     }, { passive: false });
@@ -2121,7 +2043,8 @@
           pitch -= dy * touchSens;
           const maxPitch = Math.PI / 2 - 0.05;
           pitch = Math.max(-maxPitch, Math.min(maxPitch, pitch));
-          camera.rotation.y = yaw;camera.rotation.x = pitch;
+          camera.rotation.y = yaw;
+          camera.rotation.x = pitch;
         }
       }
     }, { passive: false });
@@ -2134,12 +2057,14 @@
     renderer.domElement.addEventListener('touchend', clearLookTouch);
     renderer.domElement.addEventListener('touchcancel', clearLookTouch);
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      checkOrientationPrompt();
+    window.addEventListener('resize', updateViewportMetrics);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateViewportMetrics, 120);
+      setTimeout(updateViewportMetrics, 350);
     });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportMetrics);
+    }
 
     function clampInsideTrench(x, z) {
       const minX = -15.2;
@@ -2167,8 +2092,7 @@
 
       boomPivot.rotation.z = Math.sin(now * 0.0011) * 0.08;
       for (const w of workers) {
-        w.phase += dt * 3.2;
-        w.group.position.y = w.baseY + Math.abs(Math.sin(w.phase)) * 0.04;
+        w.phase += dt * 3.2;w.group.position.y = w.baseY + Math.abs(Math.sin(w.phase)) * 0.04;
         w.head.rotation.y = Math.sin(w.phase * 0.5) * 0.25;
         w.armR.rotation.x = -0.7 + Math.sin(w.phase * 1.4) * 0.22;
       }
@@ -2224,7 +2148,8 @@
         const jointTargets = [dirtLayer, cleanedLayer, sleeveMesh, lockStrip];
         const hits = raycaster.intersectObjects(jointTargets);
         const onActiveJoint = hits.length > 0 && Math.abs(hits[0].point.x - JOINT_X[currentJointIndex]) <= 1.45;
-        aimingAtJoint = onActiveJoint;crosshairEl.classList.toggle('locked-target', aimingAtJoint);
+        aimingAtJoint = onActiveJoint;
+        crosshairEl.classList.toggle('locked-target', aimingAtJoint);
 
         if (workHeld && aimingAtJoint) {
           const pt = hits[0].point;
@@ -2264,8 +2189,7 @@
         if (!aimingAtJoint) {
           actionStatusEl.textContent = `Подойди ближе и наведи прицел на стык №${currentJointIndex + 1} (x = ${JOINT_X[currentJointIndex]})`;
         } else if (stageIndex === 0) {
-          if (workHeld) {
-            stageProgress += dt * 36 * selectedChar.workMult;
+          if (workHeld) {stageProgress += dt * 36 * selectedChar.workMult;
             dirtMat.opacity = Math.max(0, 0.92 * (1 - stageProgress / 100));
             actionStatusEl.textContent = 'Очистка поверхности от загрязнений...';
             sound.playWorkTick('clean');
@@ -2317,7 +2241,8 @@
             actionStatusEl.textContent = glueReady
               ? 'Белый клей выступает на краях манжеты! Завершаем усадку...'
               : 'Усадка манжеты от середины к краям... следи за пузырями!';
-            sound.playWorkTick('torch');} else {
+            sound.playWorkTick('torch');
+          } else {
             actionStatusEl.textContent = 'Удерживай работу для усадки от середины к краям';
           }
 
@@ -2360,7 +2285,6 @@
       renderer.render(scene, camera);
     }
 
-    requestAnimationFrame(animate);
-  </script>
+    requestAnimationFrame(animate);</script>
 </body>
 </html>
