@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ЛНИТОиЗА v4.4 FPS — Шлифмашинка, манжета с белым клеем и мобильный режим</title>
+  <title>ЛНИТОиЗА v4.5 FPS — Исправленный запуск, шлифмашинка, манжета и телефон</title>
   <style>
     * {
       box-sizing: border-box;
@@ -599,7 +599,7 @@
 
   <div class="top-bar">
     <div class="hud-cluster">
-      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.4</strong></div>
+      <div class="badge">Проект: <strong>ЛНИТОиЗА v4.5</strong></div>
       <div class="badge fighter-hud">
         <div class="hud-avatar" id="hudAvatar"></div>
         <div>Боец: <strong id="hudCharName">Николаев Михаил</strong></div>
@@ -670,7 +670,7 @@
       <p style="font-size:12px; color:#94a3b8; margin-bottom:12px;">
         <strong>ПК:</strong> WASD — ходьба, мышь — обзор, зажатая ЛКМ — работа шлифмашинкой/горелкой/роликом, Space — прыжок.<br /><strong>Телефон:</strong> левый стик — ходьба, свайп по экрану — обзор, кнопка «РАБОТА» — удержание инструмента.
       </p>
-      <button type="button" class="primary-btn" id="startBtn">Начать изоляцию</button>
+      <button type="button" class="primary-btn" id="startBtn">Начать работу</button>
     </div>
   </div>
 
@@ -685,7 +685,6 @@
   <script type="module">
     import * as THREE from 'three';
 
-    // Определение сенсорного устройства
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     if (isTouchDevice) {
       document.body.classList.add('touch-device');
@@ -812,9 +811,9 @@
         headGear: 'helmet',
         glasses: false,
         gingerBalding: false
-      },{
-        id: 'zimin_vadim',
-        name: 'Зимин Вадим',
+      },
+      {
+        id: 'zimin_vadim',name: 'Зимин Вадим',
         buildText: 'Среднее телосложение',
         perkText: '+12% стабильное качество',
         bodyScaleX: 1.0,
@@ -895,10 +894,9 @@
           <circle cx="26" cy="${headY}" r="${headR}" fill="#f1c27d"/>
           ${glassesSVG}
           ${headTopSVG}
-        </svg>`;
-    }
-
-    let selectedChar = CHARACTERS[0];
+        </svg>
+      `;
+    }let selectedChar = CHARACTERS[0];
     const rosterGridEl = document.getElementById('rosterGrid');
     const hudCharNameEl = document.getElementById('hudCharName');
     const hudAvatarEl = document.getElementById('hudAvatar');
@@ -908,33 +906,7 @@
       hudAvatarEl.innerHTML = buildAvatarSVG(selectedChar);
     }
 
-    function renderRoster() {
-      rosterGridEl.innerHTML = '';
-      CHARACTERS.forEach((char) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'char-card' + (char.id === selectedChar.id ? ' selected' : '');
-        btn.innerHTML = `
-          <div class="avatar-box">${buildAvatarSVG(char)}</div>
-          <div class="char-info">
-            <div class="char-name">${char.name}</div>
-            <div class="char-build">${char.buildText}</div>
-            <div class="char-perk">${char.perkText}</div>
-          </div>
-        `;
-        btn.addEventListener('click', () => {
-          selectedChar = char;
-          syncSelectedCharacterVisuals();
-          renderRoster();
-          rebuildSelectedWorker3D();
-        });
-        rosterGridEl.appendChild(btn);
-      });
-    }
-    renderRoster();
-    syncSelectedCharacterVisuals();
-
-    // --- Процедурные текстуры для зачищенного металла и манжеты ---
+    // --- Процедурные текстуры ---
     function createBrushedMetalTexture() {
       const c = document.createElement('canvas');
       c.width = 512;
@@ -942,7 +914,6 @@
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#94a3b8';
       ctx.fillRect(0, 0, 512, 512);
-
       for (let i = 0; i < 1800; i++) {
         const y = Math.random() * 512;
         const alpha = 0.06 + Math.random() * 0.14;
@@ -953,7 +924,6 @@
         ctx.lineTo(512, y + (Math.random() - 0.5) * 3);
         ctx.stroke();
       }
-
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
@@ -968,19 +938,14 @@
       const ctx = c.getContext('2d');
       ctx.fillStyle = '#1e293b';
       ctx.fillRect(0, 0, 512, 512);
-
-      // Текстура полимерного покрытия манжеты
       for (let i = 0; i < 650; i++) {
         const x = Math.random() * 512;
         const y = Math.random() * 512;
         ctx.fillStyle = Math.random() > 0.5 ? 'rgba(148,163,184,0.08)' : 'rgba(15,23,42,0.22)';
         ctx.fillRect(x, y, 4, 2);
       }
-
-      // Маркировочная полоса термоиндикатора по центру манжеты
       ctx.fillStyle = 'rgba(250, 204, 21, 0.72)';
       ctx.fillRect(248, 0, 16, 512);
-
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
@@ -991,7 +956,7 @@
     const brushedMetalTex = createBrushedMetalTexture();
     const sleeveTex = createSleeveTexture();
 
-    // --- Web Audio звуковой движок ---
+    // --- Звук ---
     class SoundEngine {
       constructor() {
         this.ctx = null;
@@ -1017,7 +982,9 @@
         if (!ctx) return;
         const now = performance.now();
         if (now - this.lastTick < 75) return;
-        this.lastTick = now;const t = ctx.currentTime;
+        this.lastTick = now;
+
+        const t = ctx.currentTime;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
 
@@ -1045,11 +1012,9 @@
       }
 
       playStageComplete() {
-        const ctx = this.ensureCtx();
-        if (!ctx) return;
+        const ctx = this.ensureCtx();if (!ctx) return;
         const t = ctx.currentTime;
-        const notes = [523.25, 659.25, 783.99];
-        notes.forEach((freq, i) => {
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
           const osc = ctx.createOscillator();
           const gain = ctx.createGain();
           osc.type = 'sine';
@@ -1102,17 +1067,12 @@
 
     const sound = new SoundEngine();
 
-    // --- Сцена, камера FPS, рендерер ---
+    // --- Сцена Three.js ---
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0b111e);
     scene.fog = new THREE.FogExp2(0x0b111e, 0.013);
 
-    const camera = new THREE.PerspectiveCamera(
-      72,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      160
-    );
+    const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 160);
     camera.rotation.order = 'YXZ';
     scene.add(camera);
 
@@ -1121,18 +1081,16 @@
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     document.body.appendChild(renderer.domElement);
 
-    // --- Освещение ---
     scene.add(new THREE.AmbientLight(0x94a3b8, 1.3));
-
     const dirLight = new THREE.DirectionalLight(0xfffbeb, 2.2);
     dirLight.position.set(12, 20, 14);
     scene.add(dirLight);
-
     const trenchLight = new THREE.PointLight(0x38bdf8, 2.6, 22);
     trenchLight.position.set(0, 4.2, 2.2);
     scene.add(trenchLight);
 
-    // --- Котлован, ограждения, лестница и экскаватор ---const trenchFloorY = -2.2;
+    // Котлован, ограждения, лестница, экскаватор
+    const trenchFloorY = -2.2;
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(110, 110),
       new THREE.MeshStandardMaterial({ color: 0x3b2f24, roughness: 0.95 })
@@ -1158,8 +1116,7 @@
       const postN = new THREE.Mesh(postGeo, fenceMat);
       postN.position.set(x, 0.75, -5.2);
       const postS = postN.clone();
-      postS.position.z = 5.2;
-      scene.add(postN, postS);
+      postS.position.z = 5.2;scene.add(postN, postS);
     }
 
     const railN = new THREE.Mesh(new THREE.BoxGeometry(28.4, 0.08, 0.08), fenceMat);
@@ -1185,7 +1142,6 @@
     ladderGroup.rotation.x = 0.25;
     scene.add(ladderGroup);
 
-    // 3D-экскаватор
     const excavator = new THREE.Group();
     const trackMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
     const bodyMat = new THREE.MeshStandardMaterial({ color: 0xeab308, roughness: 0.45 });
@@ -1218,7 +1174,7 @@
     excavator.rotation.y = -2.35;
     scene.add(excavator);
 
-    // --- Рабочие в котловане ---
+    // Фоновые рабочие
     const workers = [];
     function createWorker(x, y, z, rotY, jacketHex) {
       const group = new THREE.Group();
@@ -1228,7 +1184,8 @@
       );
       body.position.y = 0.65;
       const head = new THREE.Mesh(
-        new THREE.SphereGeometry(0.22, 12, 12),new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
+        new THREE.SphereGeometry(0.22, 12, 12),
+        new THREE.MeshStandardMaterial({ color: 0xf1c27d, roughness: 0.7 })
       );
       head.position.y = 1.38;
       const helmet = new THREE.Mesh(
@@ -1253,15 +1210,14 @@
     createWorker(2.2, trenchFloorY, -2.5, -2.2, 0x0284c7);
     createWorker(10.8, trenchFloorY, 3.0, -0.85, 0xeab308);
 
-    // --- 3D-фигура выбранного персонажа в котловане ---
+    // 3D-фигура выбранного персонажа в котловане
     const JOINT_X = [-7.5, 0, 7.5];
     let currentJointIndex = 0;
     let selectedWorker3D = null;
 
     function rebuildSelectedWorker3D() {
       if (selectedWorker3D) {
-        scene.remove(selectedWorker3D.group);
-        selectedWorker3D = null;
+        scene.remove(selectedWorker3D.group);selectedWorker3D = null;
       }
 
       const char = selectedChar;
@@ -1325,7 +1281,8 @@
         const beanie = new THREE.Mesh(
           new THREE.SphereGeometry(headR * 1.05, 14, 10, 0, Math.PI * 2, 0, Math.PI * 0.58),
           new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.65 })
-        );beanie.position.y = headY + 0.02;
+        );
+        beanie.position.y = headY + 0.02;
         group.add(beanie);
       } else {
         const helmet = new THREE.Mesh(
@@ -1350,16 +1307,13 @@
       selectedWorker3D = { group, armR, baseY: trenchFloorY, phase: 0 };
     }
 
-    rebuildSelectedWorker3D();
-
-    // --- Трубопровод и детальный узел стыка (шлифовка + манжета + белый клей на краях) ---
+    // Трубопровод и стык
     const pipeRadius = 1.05;
     const pipeCenterY = 0.8;
     const pipeLength = 28;
 
     const pipe = new THREE.Mesh(
-      new THREE.CylinderGeometry(pipeRadius, pipeRadius, pipeLength, 48, 1, true),
-      new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.78, roughness: 0.32 })
+      new THREE.CylinderGeometry(pipeRadius, pipeRadius, pipeLength, 48, 1, true),new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.78, roughness: 0.32 })
     );
     pipe.rotation.z = Math.PI / 2;
     pipe.position.set(0, pipeCenterY, 0);
@@ -1377,7 +1331,6 @@
     activeJointGroup.position.set(JOINT_X[0], pipeCenterY, 0);
     scene.add(activeJointGroup);
 
-    // 1. Грязь / старое покрытие
     const dirtMat = new THREE.MeshStandardMaterial({
       color: 0x5c4028,
       roughness: 0.95,
@@ -1391,7 +1344,6 @@
     dirtLayer.rotation.z = Math.PI / 2;
     activeJointGroup.add(dirtLayer);
 
-    // 2. Детальная зачищенная поверхность (шлифованный металл + шлифовальные кольца)
     const cleanedMat = new THREE.MeshStandardMaterial({
       map: brushedMetalTex,
       color: 0xcbeafe,
@@ -1424,7 +1376,6 @@
     grindRingR.position.x = 0.65;
     activeJointGroup.add(grindRingL, grindRingR);
 
-    // 3. Детальная термоусадочная манжета (центральная усаживаемая секция + левый и правый края с белым клеем)
     const sleeveMat = new THREE.MeshStandardMaterial({
       map: sleeveTex,
       color: 0x1e293b,
@@ -1437,9 +1388,9 @@
       new THREE.CylinderGeometry(pipeRadius + 0.14, pipeRadius + 0.14, 2.25, 48, 1, true),
       sleeveMat
     );
-    sleeveMesh.rotation.z = Math.PI / 2;activeJointGroup.add(sleeveMesh);
+    sleeveMesh.rotation.z = Math.PI / 2;
+    activeJointGroup.add(sleeveMesh);
 
-    // Замковая полоса манжеты
     const lockStripMat = new THREE.MeshStandardMaterial({
       color: 0x475569,
       roughness: 0.35,
@@ -1454,7 +1405,6 @@
     lockStrip.rotation.z = Math.PI / 2;
     activeJointGroup.add(lockStrip);
 
-    // Белый клей по левому и правому краям манжеты (выступает при усадке от середины к краям)
     const whiteGlueMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
       emissive: 0xe2e8f0,
@@ -1486,13 +1436,10 @@
       return ring;
     });
 
-    // --- Инструменты в руке игрока ---
+    // Инструменты в руке
     const handRoot = new THREE.Group();
     handRoot.position.set(0.34, -0.28, -0.52);
-    camera.add(handRoot);
-
-    // Щётка для первичной очистки
-    const handBrush = new THREE.Group();
+    camera.add(handRoot);const handBrush = new THREE.Group();
     const hbHandle = new THREE.Mesh(
       new THREE.BoxGeometry(0.08, 0.08, 0.42),
       new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.5 })
@@ -1505,7 +1452,6 @@
     handBrush.add(hbHandle, hbHead);
     handRoot.add(handBrush);
 
-    // Шлифмашинка для зачистки поверхности
     const handGrinder = new THREE.Group();
     const hgBody = new THREE.Mesh(
       new THREE.CylinderGeometry(0.052, 0.058, 0.32, 14),
@@ -1526,7 +1472,6 @@
     handGrinder.visible = false;
     handRoot.add(handGrinder);
 
-    // Горелка
     const handTorch = new THREE.Group();
     const htGrip = new THREE.Mesh(
       new THREE.CylinderGeometry(0.04, 0.05, 0.4, 10),
@@ -1539,7 +1484,6 @@
     );
     htNozzle.rotation.x = Math.PI / 2.2;
     htNozzle.position.set(0, 0.03, -0.22);
-
     const htFlame = new THREE.Mesh(
       new THREE.ConeGeometry(0.085, 0.34, 12),
       new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.9 })
@@ -1547,10 +1491,10 @@
     htFlame.rotation.x = -Math.PI / 2.2;
     htFlame.position.set(0, 0.06, -0.38);
     htFlame.visible = false;
-    handTorch.add(htGrip, htNozzle, htFlame);handTorch.visible = false;
+    handTorch.add(htGrip, htNozzle, htFlame);
+    handTorch.visible = false;
     handRoot.add(handTorch);
 
-    // Ролик
     const handRoller = new THREE.Group();
     const hrFrame = new THREE.Mesh(
       new THREE.BoxGeometry(0.05, 0.05, 0.38),
@@ -1566,14 +1510,7 @@
     handRoller.visible = false;
     handRoot.add(handRoller);
 
-    function syncHandModel() {
-      handBrush.visible = stageIndex === 0;
-      handGrinder.visible = stageIndex === 1;
-      handTorch.visible = stageIndex === 2 || stageIndex === 3;
-      handRoller.visible = stageIndex === 4;
-    }
-
-    // Пузыри на манжете
+    // Пузыри
     const bubbleMeshes = [];
     const bubbleGeo = new THREE.SphereGeometry(0.11, 12, 12);
     const bubbleMat = new THREE.MeshStandardMaterial({
@@ -1582,6 +1519,63 @@
       emissiveIntensity: 0.35,
       roughness: 0.25
     });
+
+    // Состояние игрока и игры
+    const eyeHeight = 1.65;
+    const playerRadius = 0.55;
+    let yaw = 0;
+    let pitch = -0.12;
+    let velY = 0;
+    let isGrounded = true;
+    const gravity = -24;
+    const jumpSpeed = 8.5;
+    const baseWalkSpeed = 6.2;
+
+    let isRunning = false;
+    let isFinished = false;
+    let stageIndex = 0;
+    let stageProgress = 0;
+    let elapsed = 0;
+    let temperature = 20;
+    let quality = 100;
+    let workHeld = false;
+    let aimingAtJoint = false;
+    let normMode = false;
+    let totalJoints = 3;
+
+    // DOM ссылки
+    const crosshairEl = document.getElementById('crosshair');
+    const jointCounterEl = document.getElementById('jointCounter');
+    const stepsStripEl = document.getElementById('stepsStrip');
+    const normBadgeEl = document.getElementById('normBadge');const normLabelEl = document.getElementById('normLabel');
+    const timerEl = document.getElementById('timer');
+    const qualityScoreEl = document.getElementById('qualityScore');
+    const soundBtn = document.getElementById('soundBtn');
+    const stageTitleEl = document.getElementById('stageTitle');
+    const stageHintEl = document.getElementById('stageHint');
+    const progressBarEl = document.getElementById('progressBar');
+    const actionStatusEl = document.getElementById('actionStatus');
+    const tempPillEl = document.getElementById('tempPill');
+    const bubblesPillEl = document.getElementById('bubblesPill');
+    const overlayEl = document.getElementById('overlay');
+    const modalTitleEl = document.getElementById('modalTitle');
+    const modalDescEl = document.getElementById('modalDesc');
+    const modeFreeBtn = document.getElementById('modeFreeBtn');
+    const modeNormBtn = document.getElementById('modeNormBtn');
+    const joints1Btn = document.getElementById('joints1Btn');
+    const joints3Btn = document.getElementById('joints3Btn');
+    const bestTimeEl = document.getElementById('bestTime');
+    const bestQualityEl = document.getElementById('bestQuality');
+    const startBtn = document.getElementById('startBtn');
+    const joystickZone = document.getElementById('joystickZone');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const mobileWorkBtn = document.getElementById('mobileWorkBtn');
+    const mobileJumpBtn = document.getElementById('mobileJumpBtn');
+    const mobilePauseBtn = document.getElementById('mobilePauseBtn');
+
+    function updateBubblesLabel() {
+      bubblesPillEl.textContent = `Пузыри: ${bubbleMeshes.length}`;
+    }
 
     function clearBubbles() {
       for (const b of bubbleMeshes) scene.remove(b);
@@ -1604,17 +1598,6 @@
       updateBubblesLabel();
     }
 
-    // --- Игрок от первого лица ---
-    const eyeHeight = 1.65;
-    const playerRadius = 0.55;
-    let yaw = 0;
-    let pitch = -0.12;
-    let velY = 0;
-    let isGrounded = true;
-    const gravity = -24;
-    const jumpSpeed = 8.5;
-    const baseWalkSpeed = 6.2;
-
     function resetFirstPersonPlayer() {
       camera.position.set(JOINT_X[0], trenchFloorY + eyeHeight, 3.6);
       yaw = 0;
@@ -1625,39 +1608,38 @@
       camera.rotation.x = pitch;
     }
 
-    // --- UI и рекорды ---
-    const crosshairEl = document.getElementById('crosshair');
-    const jointCounterEl = document.getElementById('jointCounter');
-    const stepsStripEl = document.getElementById('stepsStrip');
-    const normBadgeEl = document.getElementById('normBadge');
-    const normLabelEl = document.getElementById('normLabel');
-    const timerEl = document.getElementById('timer');
-    const qualityScoreEl = document.getElementById('qualityScore');
-    const soundBtn = document.getElementById('soundBtn');
-    const stageTitleEl = document.getElementById('stageTitle');
-    const stageHintEl = document.getElementById('stageHint');
-    const progressBarEl = document.getElementById('progressBar');
-    const actionStatusEl = document.getElementById('actionStatus');
-    const tempPillEl = document.getElementById('tempPill');
-    const bubblesPillEl = document.getElementById('bubblesPill');
-    const overlayEl = document.getElementById('overlay');
-    const modalTitleEl = document.getElementById('modalTitle');
-    const modalDescEl = document.getElementById('modalDesc');
-    const modeFreeBtn = document.getElementById('modeFreeBtn');
-    const modeNormBtn = document.getElementById('modeNormBtn');
-    const joints1Btn = document.getElementById('joints1Btn');
-    const joints3Btn = document.getElementById('joints3Btn');
-    const bestTimeEl = document.getElementById('bestTime');
-    const bestQualityEl = document.getElementById('bestQuality');
-    const startBtn = document.getElementById('startBtn');
+    function syncHandModel() {
+      handBrush.visible = stageIndex === 0;
+      handGrinder.visible = stageIndex === 1;
+      handTorch.visible = stageIndex === 2 || stageIndex === 3;
+      handRoller.visible = stageIndex === 4;
+    }
 
-    soundBtn.addEventListener('click', () => {
-      sound.enabled = !sound.enabled;soundBtn.textContent = sound.enabled ? 'Звук: ВКЛ' : 'Звук: ВЫКЛ';
-      soundBtn.classList.toggle('muted', !sound.enabled);
-    });
+    function updateTempLabel() {
+      const rounded = Math.round(temperature);
+      tempPillEl.textContent = `Температура: ${rounded} °C (цель: 90 °C)`;
+      tempPillEl.classList.remove('target', 'hot');
+      if (rounded > 105) tempPillEl.classList.add('hot');
+      else if (rounded >= 85 && rounded <= 96) tempPillEl.classList.add('target');
+    }
 
-    const STAGES = [
-      { short: '1. Очистка', title: '1. Очистка поверхности', hint: 'Наведи прицел на стык и удерживай работу, чтобы снять грязь' },
+    function updateSleeveCenterToEdges(progressPct) {
+      const t = Math.min(1, Math.max(0, progressPct / 100));
+      const radialScale = 1.15 - t * 0.135;
+      sleeveMesh.scale.set(1, radialScale, radialScale);
+      lockStrip.scale.set(1, radialScale + 0.01, radialScale + 0.01);
+
+      const glueFactor = Math.max(0, (t - 0.25) / 0.75);
+      whiteGlueMat.opacity = glueFactor * 0.96;
+      const glueR = pipeRadius + 0.015 + (1 - glueFactor) * 0.06;
+      const glueScale = glueR / (pipeRadius + 0.03);
+      glueLeft.scale.setScalar(glueScale);
+      glueRight.scale.setScalar(glueScale);
+      glueLeft.position.x = -0.35 - t * 0.79;
+      glueRight.position.x = 0.35 + t * 0.79;
+    }
+
+    const STAGES = [{ short: '1. Очистка', title: '1. Очистка поверхности', hint: 'Наведи прицел на стык и удерживай работу, чтобы снять грязь' },
       { short: '2. Шлифмашинка', title: '2. Зачистка шлифмашинкой', hint: 'Удерживай работу шлифмашинкой до блеска зачищенного металла' },
       { short: '3. Нагрев 90 °C', title: '3. Нагрев горелкой до 90 °C', hint: 'Нагрей стык до ~90 °C без перегрева выше 105 °C' },
       { short: '4. Усадка', title: '4. Усадка манжеты от середины к краям', hint: 'Веди усадку от центра к краям, пока на концах не проступит белый клей' },
@@ -1672,81 +1654,6 @@
       return el;
     });
 
-    let normMode = false;
-    let totalJoints = 3;
-
-    let bestTime = localStorage.getItem('lnitoizaV44BestTime');
-    let bestQuality = localStorage.getItem('lnitoizaV44BestQuality');
-
-    function renderRecords() {
-      bestTimeEl.textContent = bestTime ? `${Number(bestTime).toFixed(1)} с` : '—';
-      bestQualityEl.textContent = bestQuality ? `${bestQuality}%` : '—';
-    }
-    renderRecords();
-
-    function getNormLimit() {
-      return totalJoints === 3 ? 140 : 50;
-    }
-
-    function syncModeButtons() {
-      modeFreeBtn.classList.toggle('active', !normMode);
-      modeNormBtn.classList.toggle('active', normMode);
-      joints1Btn.classList.toggle('active', totalJoints === 1);
-      joints3Btn.classList.toggle('active', totalJoints === 3);
-      normLabelEl.textContent = normMode ? `${getNormLimit().toFixed(1)} с` : 'Свободный';
-      normBadgeEl.classList.remove('fail');
-    }
-
-    modeFreeBtn.addEventListener('click', () => { normMode = false; syncModeButtons(); });
-    modeNormBtn.addEventListener('click', () => { normMode = true; syncModeButtons(); });
-    joints1Btn.addEventListener('click', () => { totalJoints = 1; syncModeButtons(); });
-    joints3Btn.addEventListener('click', () => { totalJoints = 3; syncModeButtons(); });
-
-    let isRunning = false;
-    let isFinished = false;
-    let stageIndex = 0;
-    let stageProgress = 0;
-    let elapsed = 0;
-    let temperature = 20;
-    let quality = 100;
-    let workHeld = false;
-    let aimingAtJoint = false;
-
-    const raycaster = new THREE.Raycaster();
-    const centerNDC = new THREE.Vector2(0, 0);
-
-    function updateBubblesLabel() {
-      bubblesPillEl.textContent = `Пузыри: ${bubbleMeshes.length}`;
-    }
-
-    function updateTempLabel() {
-      const rounded = Math.round(temperature);
-      tempPillEl.textContent = `Температура: ${rounded} °C (цель: 90 °C)`;
-      tempPillEl.classList.remove('target', 'hot');
-      if (rounded > 105) {
-        tempPillEl.classList.add('hot');
-      } else if (rounded >= 85 && rounded <= 96) {
-        tempPillEl.classList.add('target');
-      }
-    }
-
-    function updateSleeveCenterToEdges(progressPct) {
-      const t = Math.min(1, Math.max(0, progressPct / 100));
-      // Усадка от середины к краям: центральный диаметр прижимается к трубе
-      const radialScale = 1.15 - t * 0.135;
-      sleeveMesh.scale.set(1, radialScale, radialScale);
-      lockStrip.scale.set(1, radialScale + 0.01, radialScale + 0.01);
-
-      // Постепенное проявление белого клея на левом и правом краях манжеты
-      const glueFactor = Math.max(0, (t - 0.25) / 0.75);
-      whiteGlueMat.opacity = glueFactor * 0.96;
-      const glueR = pipeRadius + 0.015 + (1 - glueFactor) * 0.06;
-      const glueScale = glueR / (pipeRadius + 0.03);
-      glueLeft.scale.setScalar(glueScale);
-      glueRight.scale.setScalar(glueScale);
-      glueLeft.position.x = -0.35 - t * 0.79;glueRight.position.x = 0.35 + t * 0.79;
-    }
-
     function syncStageUI() {
       const s = STAGES[stageIndex];
       syncSelectedCharacterVisuals();
@@ -1757,7 +1664,7 @@
       qualityScoreEl.textContent = `${Math.max(0, Math.round(quality))}%`;
 
       if (normMode) {
-        const left = Math.max(0, getNormLimit() - elapsed);
+        const left = Math.max(0, (totalJoints === 3 ? 140 : 50) - elapsed);
         normLabelEl.textContent = `${left.toFixed(1)} с`;
         normBadgeEl.classList.toggle('fail', left <= 15);
       } else {
@@ -1804,6 +1711,88 @@
       timerEl.textContent = '00.0 с';
     }
 
+    let bestTime = localStorage.getItem('lnitoizaV45BestTime');
+    let bestQuality = localStorage.getItem('lnitoizaV45BestQuality');
+
+    function renderRecords() {
+      bestTimeEl.textContent = bestTime ? `${Number(bestTime).toFixed(1)} с` : '—';
+      bestQualityEl.textContent = bestQuality ? `${bestQuality}%` : '—';
+    }
+    renderRecords();
+
+    function syncModeButtons() {
+      modeFreeBtn.classList.toggle('active', !normMode);
+      modeNormBtn.classList.toggle('active', normMode);
+      joints1Btn.classList.toggle('active', totalJoints === 1);
+      joints3Btn.classList.toggle('active', totalJoints === 3);
+      normLabelEl.textContent = normMode ? `${(totalJoints === 3 ? 140 : 50).toFixed(1)} с` : 'Свободный';
+      normBadgeEl.classList.remove('fail');
+    }
+
+    modeFreeBtn.addEventListener('click', () => { normMode = false; syncModeButtons(); });
+    modeNormBtn.addEventListener('click', () => { normMode = true; syncModeButtons(); });
+    joints1Btn.addEventListener('click', () => { totalJoints = 1; syncModeButtons(); });
+    joints3Btn.addEventListener('click', () => { totalJoints = 3; syncModeButtons(); });
+
+    soundBtn.addEventListener('click', () => {sound.enabled = !sound.enabled;
+      soundBtn.textContent = sound.enabled ? 'Звук: ВКЛ' : 'Звук: ВЫКЛ';
+      soundBtn.classList.toggle('muted', !sound.enabled);
+    });
+
+    function showPauseOverlay() {
+      if (isFinished) return;
+      isRunning = false;
+      workHeld = false;
+      htFlame.visible = false;
+      mobileWorkBtn.classList.remove('pressed');
+      modalTitleEl.textContent = `Пауза — ${selectedChar.name}`;
+      modalDescEl.textContent = 'Нажми кнопку ниже, чтобы продолжить работу.';
+      startBtn.textContent = 'Продолжить работу';
+      overlayEl.classList.remove('hidden');
+    }
+
+    function finishGame(success) {
+      isRunning = false;
+      isFinished = true;
+      workHeld = false;
+      htFlame.visible = false;
+      mobileWorkBtn.classList.remove('pressed');
+
+      if (document.pointerLockElement === renderer.domElement && document.exitPointerLock) {
+        try { document.exitPointerLock(); } catch (_) {}
+      }
+
+      if (success) {
+        stepChips.forEach((c) => {
+          c.classList.remove('active');
+          c.classList.add('done');
+        });
+      }
+
+      const finalQuality = Math.max(0, Math.round(quality));
+      if (success && totalJoints === 3) {
+        if (!bestTime || elapsed < Number(bestTime)) {
+          bestTime = elapsed.toFixed(1);
+          localStorage.setItem('lnitoizaV45BestTime', bestTime);
+        }
+        if (!bestQuality || finalQuality > Number(bestQuality)) {
+          bestQuality = String(finalQuality);
+          localStorage.setItem('lnitoizaV45BestQuality', bestQuality);
+        }
+        renderRecords();
+      }
+
+      let verdict = 'Все стыки изолированы!';
+      if (!success) verdict = 'Время норматива вышло!';
+      else if (finalQuality < 60) verdict = 'Стыки изолированы — есть замечания';
+      else if (finalQuality < 85) verdict = 'Хороший результат!';
+
+      modalTitleEl.textContent = `${verdict} (${selectedChar.name})`;
+      modalDescEl.textContent = `Время: ${elapsed.toFixed(1)} с • Среднее качество: ${finalQuality}%.`;
+      startBtn.textContent = 'Начать работу заново';
+      overlayEl.classList.remove('hidden');
+    }
+
     function advanceStage() {
       stageProgress = 0;
       sound.playStageComplete();
@@ -1815,7 +1804,6 @@
       } else if (stageIndex === 1) {
         cleanedMat.opacity = 0.92;
         grindRingMat.opacity = 0.85;
-        // Надеваем манжету после зачистки трубы
         sleeveMat.opacity = 0.92;
         lockStripMat.opacity = 0.88;
         updateSleeveCenterToEdges(0);
@@ -1843,85 +1831,72 @@
       }
     }
 
-    function showPauseOverlay() {
-      if (isFinished) return;
-      isRunning = false;
-      workHeld = false;
-      htFlame.visible = false;
-      mobileWorkBtn.classList.remove('pressed');
-      modalTitleEl.textContent = `Пауза — ${selectedChar.name}`;
-      modalDescEl.textContent = 'Нажми кнопку ниже, чтобы продолжить работу.';
-      startBtn.textContent = 'Продолжить';
-      overlayEl.classList.remove('hidden');
-    }
-
-    function finishGame(success) {
-      isRunning = false;
-      isFinished = true;
-      workHeld = false;
-      htFlame.visible = false;
-      mobileWorkBtn.classList.remove('pressed');
-
-      if (document.pointerLockElement === renderer.domElement) {
-        document.exitPointerLock();
-      }
-
-      if (success) {
-        stepChips.forEach((c) => {
-          c.classList.remove('active');
-          c.classList.add('done');
-        });}
-
-      const finalQuality = Math.max(0, Math.round(quality));
-      if (success && totalJoints === 3) {
-        if (!bestTime || elapsed < Number(bestTime)) {
-          bestTime = elapsed.toFixed(1);
-          localStorage.setItem('lnitoizaV44BestTime', bestTime);
-        }
-        if (!bestQuality || finalQuality > Number(bestQuality)) {
-          bestQuality = String(finalQuality);
-          localStorage.setItem('lnitoizaV44BestQuality', bestQuality);
-        }
-        renderRecords();
-      }
-
-      let verdict = 'Все стыки изолированы!';
-      if (!success) verdict = 'Время норматива вышло!';
-      else if (finalQuality < 60) verdict = 'Стыки изолированы — есть замечания';
-      else if (finalQuality < 85) verdict = 'Хороший результат!';
-
-      modalTitleEl.textContent = `${verdict} (${selectedChar.name})`;
-      modalDescEl.textContent = `Время: ${elapsed.toFixed(1)} с • Среднее качество: ${finalQuality}%.`;
-      startBtn.textContent = 'Пройти снова';
-      overlayEl.classList.remove('hidden');
-    }
-
-    startBtn.addEventListener('click', () => {
+    // --- Надёжный запуск работы ---
+    function beginGameSession() {
+      sound.ensureCtx();
       if (isFinished || (elapsed === 0 && stageIndex === 0 && stageProgress === 0)) {
         resetSimulation();
+      } else {
+        rebuildSelectedWorker3D();
+        syncStageUI();
       }
       overlayEl.classList.add('hidden');
+      isRunning = true;
+      lastTime = performance.now();
+
       if (!isTouchDevice && renderer.domElement.requestPointerLock) {
-        renderer.domElement.requestPointerLock();
-      } else {
-        isRunning = true;
-        lastTime = performance.now();
+        try {
+          const req = renderer.domElement.requestPointerLock();
+          if (req && typeof req.catch === 'function') {
+            req.catch(() => {});
+          }} catch (_) {}
       }
-    });
+    }
+
+    startBtn.addEventListener('click', beginGameSession);
+    startBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      beginGameSession();
+    }, { passive: false });
 
     document.addEventListener('pointerlockchange', () => {
       if (isTouchDevice) return;
       const locked = document.pointerLockElement === renderer.domElement;
-      if (locked && !isFinished) {
-        isRunning = true;
-        overlayEl.classList.add('hidden');
-        lastTime = performance.now();
-      } else if (!locked && isRunning && !isFinished) {
-        showPauseOverlay();
+      if (!locked && isRunning && !isFinished && !overlayEl.classList.contains('hidden')) {
+        // Уже на паузе
       }
     });
 
-    // --- Управление ПК (клавиатура + мышь) ---
+    // Рендер карточек бойцов (после объявления всех функций и переменных)
+    function renderRoster() {
+      rosterGridEl.innerHTML = '';
+      CHARACTERS.forEach((char) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'char-card' + (char.id === selectedChar.id ? ' selected' : '');
+        btn.innerHTML = `
+          <div class="avatar-box">${buildAvatarSVG(char)}</div>
+          <div class="char-info">
+            <div class="char-name">${char.name}</div>
+            <div class="char-build">${char.buildText}</div>
+            <div class="char-perk">${char.perkText}</div>
+          </div>
+        `;
+        btn.addEventListener('click', () => {
+          selectedChar = char;
+          syncSelectedCharacterVisuals();
+          renderRoster();
+          rebuildSelectedWorker3D();
+        });
+        rosterGridEl.appendChild(btn);
+      });
+    }
+
+    renderRoster();
+    syncSelectedCharacterVisuals();
+    rebuildSelectedWorker3D();
+
+    // --- Управление ПК и телефон ---
     const keys = new Set();
 
     window.addEventListener('keydown', (e) => {
@@ -1960,13 +1935,6 @@
       }
     });
 
-    // --- Сенсорное управление для телефона ---
-    const joystickZone = document.getElementById('joystickZone');
-    const joystickKnob = document.getElementById('joystickKnob');
-    const mobileWorkBtn = document.getElementById('mobileWorkBtn');
-    const mobileJumpBtn = document.getElementById('mobileJumpBtn');
-    const mobilePauseBtn = document.getElementById('mobilePauseBtn');
-
     let joyTouchId = null;
     let joyVecX = 0;
     let joyVecY = 0;
@@ -1985,7 +1953,8 @@
         const cx = rect.left + rect.width / 2;
         const cy = rect.top + rect.height / 2;
         const maxR = rect.width * 0.38;
-        let dx = t.clientX - cx;let dy = t.clientY - cy;
+        let dx = t.clientX - cx;
+        let dy = t.clientY - cy;
         const dist = Math.hypot(dx, dy);
         if (dist > maxR) {
           dx = (dx / dist) * maxR;
@@ -2007,8 +1976,7 @@
         }
       }
     }
-    joystickZone.addEventListener('touchend', resetJoystick);
-    joystickZone.addEventListener('touchcancel', resetJoystick);
+    joystickZone.addEventListener('touchend', resetJoystick);joystickZone.addEventListener('touchcancel', resetJoystick);
 
     mobileWorkBtn.addEventListener('touchstart', (e) => {
       e.preventDefault();
@@ -2038,7 +2006,6 @@
       if (isRunning) showPauseOverlay();
     });
 
-    // Свайп по экрану для поворота камеры на телефоне
     let lookTouchId = null;
     let lastLookX = 0;
     let lastLookY = 0;
@@ -2102,13 +2069,18 @@
       return { x: cx, z: cz };
     }
 
+    const raycaster = new THREE.Raycaster();
+    const centerNDC = new THREE.Vector2(0, 0);
+
     // --- Главный цикл ---
     let lastTime = performance.now();
 
     function animate(now) {
       requestAnimationFrame(animate);
       const dt = Math.min((now - lastTime) / 1000, 0.05);
-      lastTime = now;boomPivot.rotation.z = Math.sin(now * 0.0011) * 0.08;
+      lastTime = now;
+
+      boomPivot.rotation.z = Math.sin(now * 0.0011) * 0.08;
       for (const w of workers) {
         w.phase += dt * 3.2;
         w.group.position.y = w.baseY + Math.abs(Math.sin(w.phase)) * 0.04;
@@ -2122,11 +2094,10 @@
         selectedWorker3D.armR.rotation.x = -0.8 + Math.sin(selectedWorker3D.phase * 1.8) * 0.28;
       }
 
-      if (isRunning) {
-        elapsed += dt;
+      if (isRunning) {elapsed += dt;
         timerEl.textContent = `${elapsed.toFixed(1)} с`;
 
-        if (normMode && elapsed >= getNormLimit()) {
+        if (normMode && elapsed >= (totalJoints === 3 ? 140 : 50)) {
           finishGame(false);
           return;
         }
@@ -2205,7 +2176,8 @@
           updateTempLabel();
         }
 
-        if (!aimingAtJoint) {actionStatusEl.textContent = `Подойди ближе и наведи прицел на стык №${currentJointIndex + 1} (x = ${JOINT_X[currentJointIndex]})`;
+        if (!aimingAtJoint) {
+          actionStatusEl.textContent = `Подойди ближе и наведи прицел на стык №${currentJointIndex + 1} (x = ${JOINT_X[currentJointIndex]})`;
         } else if (stageIndex === 0) {
           if (workHeld) {
             stageProgress += dt * 36 * selectedChar.workMult;
@@ -2218,8 +2190,7 @@
           if (stageProgress >= 100) advanceStage();
 
         } else if (stageIndex === 1) {
-          if (workHeld) {
-            stageProgress += dt * 34 * selectedChar.workMult;
+          if (workHeld) {stageProgress += dt * 34 * selectedChar.workMult;
             const p = stageProgress / 100;
             cleanedMat.opacity = Math.min(0.92, 0.55 + p * 0.37);
             grindRingMat.opacity = Math.min(0.85, 0.4 + p * 0.45);
@@ -2291,7 +2262,8 @@
             actionStatusEl.textContent = 'Удерживай работу для прокатки роликом';
           }
 
-          if (bubbleMeshes.length > 0 && workHeld) {quality = Math.max(0, quality - dt * 5);
+          if (bubbleMeshes.length > 0 && workHeld) {
+            quality = Math.max(0, quality - dt * 5);
           }
 
           if (stageProgress >= 100) advanceStage();
